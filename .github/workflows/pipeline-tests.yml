@@ -65,6 +65,12 @@ jobs:
     - name: Checkout 🛎️
       uses: actions/checkout@v4
 
+    - name: Log in to Docker Hub 🔐
+      uses: docker/login-action@v3
+      with:
+        username: ${{ vars.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
     - name: Extracting Metadata 🔧
       id: meta
       uses: docker/metadata-action@v5
