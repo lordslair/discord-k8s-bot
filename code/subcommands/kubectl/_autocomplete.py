@@ -6,7 +6,7 @@ from kubernetes import config, client
 from loguru import logger
 
 
-def get_k8s_pod_list(ctx: discord.AutocompleteContext):
+def k8s_list_namespaced_pod(ctx: discord.AutocompleteContext):
     try:
         config.load_kube_config(f"/etc/kubeconfig.yaml")
         pods = client.CoreV1Api().list_namespaced_pod(namespace)

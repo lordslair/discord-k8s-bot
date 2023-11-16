@@ -65,16 +65,16 @@ try:
         name='kubectl',
         )
 except Exception as e:
-    logger.error(f'[{group_auction}] Command Group KO [{e}]')
+    logger.error(f'[{group_kubectl}] Command Group KO [{e}]')
 else:
-    logger.debug(f'[{group_auction}] Command Group OK')
+    logger.debug(f'[{group_kubectl}] Command Group OK')
 
 try:
     kubectl.get(group_kubectl, bot)
 except Exception as e:
-    logger.error(f'[{group_auction}] Command Group KO [{e}]')
+    logger.error(f'[{group_kubectl}] Command Group KO [{e}]')
 else:
-    logger.debug(f'[{group_auction}] Commands OK')
+    logger.debug(f'[{group_kubectl}] Commands OK')
 
 
 # Run Discord bot
