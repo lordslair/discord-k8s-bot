@@ -8,7 +8,7 @@ import time
 from loguru import logger
 
 from subcommands import (
-    get,
+    kubectl,
     )
 
 # Log Internal imports
