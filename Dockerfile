@@ -21,8 +21,8 @@ RUN apk update --no-cache \
         "python3-dev>=3.11" \
     && su discord -c \
         "python3 -m ensurepip --upgrade && \
-        pip3 install --user -U -r requirements.txt && \
-        rm requirements.txt" \
+        pip3 install --user -U -r /requirements.txt && \
+        rm /requirements.txt" \
     && apk del .build-deps
 
 USER discord

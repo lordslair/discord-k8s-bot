@@ -9,6 +9,7 @@ from loguru import logger
 
 from subcommands.infra._autocomplete import k8s_list_namespace
 
+
 def get(group_kubectl):
     @group_kubectl.command(
         description='Display one or many resources.',
@@ -43,7 +44,7 @@ def get(group_kubectl):
             )
 
         try:
-            config.load_kube_config(f"/etc/kubeconfig.yaml")
+            config.load_kube_config("/etc/kubeconfig.yaml")
         except Exception as e:
             logger.error(f'[#{ctx.channel.name}][{ctx.author.name}] └──> K8s Load KO [{e}]')
         else:
