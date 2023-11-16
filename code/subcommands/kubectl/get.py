@@ -7,10 +7,10 @@ from discord.ext import commands
 from kubernetes import config, client
 from loguru import logger
 
-from subcommands.infra._autocomplete import k8s_list_namespace
+from subcommands.kubectl._autocomplete import k8s_list_namespace
 
 
-def get(group_kubectl):
+def get(group_kubectl, bot):
     @group_kubectl.command(
         description='Display one or many resources.',
         default_permission=False,
@@ -44,7 +44,7 @@ def get(group_kubectl):
             )
 
         try:
-            config.load_kube_config("/etc/kubeconfig.yaml")
+            config.load_kube_config("/etc/k8s/kubeconfig.yaml")
         except Exception as e:
             logger.error(f'[#{ctx.channel.name}][{ctx.author.name}] └──> K8s Load KO [{e}]')
         else:

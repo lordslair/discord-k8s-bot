@@ -60,7 +60,7 @@ async def on_application_command_error(ctx, error):
 # /kubectl Commands (aka tha main commands)
 #
 try:
-    group_kubectl  = bot.create_group(
+    group_kubectl = bot.create_group(
         description="Commands related to classic kubectl actions",
         name='kubectl',
         )
