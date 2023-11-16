@@ -1,0 +1,72 @@
+# This workflow will install Python dependencies, run tests with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Pipeline Tests (ALL)
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  contents: read
+
+jobs:
+  app-pytest:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [ "3.10", "3.11" ]
+
+    steps:
+    - name: Checkout 🛎️
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }} 🐍
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install requirements ⏬
+      run: |
+        echo "--- Installing PIP"
+        python -m pip install --upgrade pip
+        echo "--- Installing PyTest prerequisites"
+        pip install pytest flake8
+        echo "--- Installing requirements"
+        if [ -f requirements.txt ]; \
+          then pip install -r requirements.txt; \
+        fi
+
+    - name: Lint with flake8 📝
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+    - name: Test with PyTest ⚙️
+      env:
+          LOGURU_LEVEL: ${{ vars.LOGURU_LEVEL }}
+      run: |
+        echo "--- Starting PyTest"
+
+    - name: Extracting Metadata 🔧
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ vars.DOCKER_USERNAME }}/${{ vars.DOCKER_IMAGE }}
+        tags: |
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix=,suffix=,format=short
+          type=edge
+          type=raw,value=latest
+
+    - name: Build & Push to Docker Hub 🚀
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: false
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
