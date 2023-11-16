@@ -5,7 +5,7 @@ RUN adduser -h /code -u 1000 -D -H discord
 ENV PIP_NO_CACHE_DIR=1
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
-COPY --chown=discord:discord requirements.txt /requirements.txt
+COPY --chown=discord:discord requirements.txt /code/requirements.txt
 COPY --chown=discord:discord /code            /code
 
 WORKDIR /code
@@ -21,8 +21,8 @@ RUN apk update --no-cache \
         "python3-dev>=3.11" \
     && su discord -c \
         "python3 -m ensurepip --upgrade && \
-        pip3 install --user -U -r /requirements.txt && \
-        rm /requirements.txt" \
+        pip3 install --user -U -r requirements.txt && \
+        rm requirements.txt" \
     && apk del .build-deps
 
 USER discord
