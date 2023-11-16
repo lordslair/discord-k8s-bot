@@ -52,7 +52,7 @@ jobs:
         echo "--- Starting PyTest"
 
 
-  build:
+  build-push:
     runs-on: ubuntu-latest
 
     needs:
@@ -74,10 +74,10 @@ jobs:
           type=sha,prefix=,suffix=,format=short
           type=edge
 
-    - name: Build 🏗️
+    - name: Build 🏗️ & Push to Docker Hub 🚀  
       uses: docker/build-push-action@v5
       with:
         context: .
-        push: false
+        push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
