@@ -7,7 +7,7 @@ from discord.ext import commands
 from kubernetes import config, client
 from loguru import logger
 
-from subcommands.infra._autocomplete import k8s_list_namespaced_pod
+from subcommands.infra._autocomplete import k8s_list_namespace
 
 def get(group_kubectl):
     @group_kubectl.command(
@@ -20,7 +20,7 @@ def get(group_kubectl):
     @option(
         "namespace",
         description="Namespace",
-        autocomplete=k8s_list_namespaced_pod
+        autocomplete=k8s_list_namespace
         )
     @option(
         "resource",
