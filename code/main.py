@@ -70,6 +70,7 @@ else:
     logger.debug(f'[{group_kubectl}] Command Group OK')
 
 try:
+    kubectl.delete(group_kubectl, bot)
     kubectl.get(group_kubectl, bot)
 except Exception as e:
     logger.error(f'[{group_kubectl}] Command Group KO [{e}]')

@@ -20,6 +20,13 @@ def k8s_list_namespaced_pod(ctx: discord.AutocompleteContext):
         return db_list
 
 
+def k8s_list_namespaced_resources(ctx: discord.AutocompleteContext):
+    if ctx.options["resource"] == 'pod':
+        return k8s_list_namespaced_pod(ctx)
+    else:
+        return None
+
+
 def k8s_list_namespace(ctx: discord.AutocompleteContext):
     try:
         config.load_kube_config("/etc/k8s/kubeconfig.yaml")
