@@ -70,6 +70,7 @@ else:
     logger.debug(f'[{group_kubectl}] Command Group OK')
 
 try:
+    kubectl.apply(group_kubectl, bot)
     kubectl.delete(group_kubectl, bot)
     kubectl.get(group_kubectl, bot)
     kubectl.logs(group_kubectl, bot)
