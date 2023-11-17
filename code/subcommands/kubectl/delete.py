@@ -15,7 +15,7 @@ from subcommands.kubectl._autocomplete import (
 
 def delete(group_kubectl, bot):
     @group_kubectl.command(
-        description='Display one or many resources.',
+        description='Delete resources by names.',
         default_permission=False,
         name='delete',
         )
