@@ -8,6 +8,7 @@ import time
 from loguru import logger
 
 from subcommands import (
+    diskube,
     kubectl,
     )
 
@@ -47,6 +48,11 @@ async def on_application_command_error(ctx, error):
             "Sorry, you don't have permission to do this.",
             ephemeral=True
             )
+    elif isinstance(error, discord.ext.commands.MissingAnyRole):
+        await ctx.respond(
+            "Sorry, you don't have the role to do this.",
+            ephemeral=True
+            )
     elif isinstance(error, discord.ext.commands.CommandNotFound):
         await ctx.respond(
             "Sorry, unable to find the proper interaction.",
@@ -54,6 +60,26 @@ async def on_application_command_error(ctx, error):
             )
     else:
         raise error
+
+
+#
+# /diskube Commands (aka the bot commands)
+#
+try:
+    group_diskube = bot.create_group(
+        description="Commands related to bot own actions",
+        name='diskube',
+        )
+except Exception as e:
+    logger.error(f'[{group_diskube}] Command Group KO [{e}]')
+else:
+    logger.debug(f'[{group_diskube}] Command Group OK')
+    try:
+        diskube.settings(group_diskube, bot)
+    except Exception as e:
+        logger.error(f'[{group_diskube}] Subcommands KO [{e}]')
+    else:
+        logger.debug(f'[{group_diskube}] Subcommands OK')
 
 
 #
