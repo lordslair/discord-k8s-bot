@@ -47,7 +47,7 @@ def logs(group_kubectl, bot):
     ):
         await ctx.defer(ephemeral=True)  # To defer answer (default: 15min)
         logger.info(
-            f'[#{ctx.channel.name}][{ctx.channel.name}] '
+            f'[#{ctx.channel.name}][{ctx.author.name}] '
             f'/{group_kubectl} logs {resource_name} [{namespace}]'
             )
 
