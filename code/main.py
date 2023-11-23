@@ -68,16 +68,16 @@ except Exception as e:
     logger.error(f'[{group_kubectl}] Command Group KO [{e}]')
 else:
     logger.debug(f'[{group_kubectl}] Command Group OK')
-
-try:
-    kubectl.apply(group_kubectl, bot)
-    kubectl.delete(group_kubectl, bot)
-    kubectl.get(group_kubectl, bot)
-    kubectl.logs(group_kubectl, bot)
-except Exception as e:
-    logger.error(f'[{group_kubectl}] Command Group KO [{e}]')
-else:
-    logger.debug(f'[{group_kubectl}] Commands OK')
+    try:
+        kubectl.apply(group_kubectl, bot)
+        kubectl.config(group_kubectl, bot)
+        kubectl.delete(group_kubectl, bot)
+        kubectl.get(group_kubectl, bot)
+        kubectl.logs(group_kubectl, bot)
+    except Exception as e:
+        logger.error(f'[{group_kubectl}] Subcommands KO [{e}]')
+    else:
+        logger.debug(f'[{group_kubectl}] Subcommands OK')
 
 
 # Run Discord bot
