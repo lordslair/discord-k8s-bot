@@ -8,6 +8,7 @@ from kubernetes import config, client
 from loguru import logger
 
 from subcommands.kubectl._autocomplete import k8s_list_namespace
+from variables import DISCORD_ROLE
 
 
 def get(group_kubectl, bot):
@@ -17,7 +18,7 @@ def get(group_kubectl, bot):
         name='get',
         )
     @commands.guild_only()  # Hides the command from the menu in DMs
-    @commands.has_any_role('Team')
+    @commands.has_any_role(DISCORD_ROLE)
     @option(
         "namespace",
         description="Namespace",

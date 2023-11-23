@@ -2,7 +2,6 @@
 # -*- coding: utf8 -*-
 
 import discord
-import os
 import time
 
 from loguru import logger
@@ -11,17 +10,10 @@ from subcommands import (
     diskube,
     kubectl,
     )
-
-# Log Internal imports
-logger.info('Imports OK')
-
-# Discord variables
-DISCORD_GUILD = os.environ.get("DISCORD_GUILD", None)
-DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
-
-# Log Internal imports
-logger.info('Internal ENV vars loading OK')
-logger.debug(f'DISCORD_GUILD:{DISCORD_GUILD}')
+from variables import (
+    DISCORD_GUILD,
+    DISCORD_TOKEN,
+    )
 
 try:
     if DISCORD_GUILD:

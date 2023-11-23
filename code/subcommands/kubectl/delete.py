@@ -11,6 +11,7 @@ from subcommands.kubectl._autocomplete import (
     k8s_list_namespace,
     k8s_list_namespaced_resources,
 )
+from variables import DISCORD_ROLE
 
 
 def delete(group_kubectl, bot):
@@ -20,7 +21,7 @@ def delete(group_kubectl, bot):
         name='delete',
         )
     @commands.guild_only()  # Hides the command from the menu in DMs
-    @commands.has_any_role('Team')
+    @commands.has_any_role(DISCORD_ROLE)
     @option(
         "namespace",
         description="Namespace",

@@ -6,7 +6,7 @@ import os
 from discord.ext import commands
 from loguru import logger
 
-DISCORD_ROLE = os.environ.get("DISCORD_ROLE", None)
+from variables import DISCORD_ROLE
 
 
 def settings(group_diskube, bot):

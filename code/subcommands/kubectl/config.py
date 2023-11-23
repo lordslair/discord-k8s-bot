@@ -8,6 +8,8 @@ from discord.commands import option
 from discord.ext import commands
 from loguru import logger
 
+from variables import DISCORD_ROLE
+
 
 def config(group_kubectl, bot):
     @group_kubectl.command(
@@ -16,7 +18,7 @@ def config(group_kubectl, bot):
         name='config',
         )
     @commands.guild_only()  # Hides the command from the menu in DMs
-    @commands.has_any_role('Team')
+    @commands.has_any_role(DISCORD_ROLE)
     @option(
         "subcommand",
         description="Subcommand",
