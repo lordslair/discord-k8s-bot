@@ -39,3 +39,20 @@ def k8s_list_namespace(ctx: discord.AutocompleteContext):
         for namespace in namespaces.items:
             db_list.append(discord.OptionChoice(namespace.metadata.name))
         return db_list
+
+
+def k8s_list_pod_containers(ctx: discord.AutocompleteContext):
+    try:
+        config.load_kube_config("/etc/k8s/kubeconfig.yaml")
+        pod = client.CoreV1Api().read_namespaced_pod(
+            namespace=ctx.options["namespace"],
+            name=ctx.options["resource_name"],
+            )
+    except Exception as e:
+        logger.error(f'K8s Query KO [{e}]')
+        return []
+    else:
+        db_list = []
+        for container in pod.spec.containers:
+            db_list.append(discord.OptionChoice(container.name))
+        return db_list

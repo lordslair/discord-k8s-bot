@@ -11,6 +11,7 @@ from loguru import logger
 from subcommands.kubectl._autocomplete import (
     k8s_list_namespace,
     k8s_list_namespaced_resources,
+    k8s_list_pod_containers,
 )
 from variables import DISCORD_ROLE
 
@@ -26,7 +27,7 @@ def logs(group_kubectl, bot):
     @option(
         "namespace",
         description="Namespace",
-        autocomplete=k8s_list_namespace
+        autocomplete=k8s_list_namespace,
         )
     @option(
         "resource",
@@ -38,18 +39,24 @@ def logs(group_kubectl, bot):
     @option(
         "resource_name",
         description="Resource name",
-        autocomplete=k8s_list_namespaced_resources
+        autocomplete=k8s_list_namespaced_resources,
+        )
+    @option(
+        "subresource_name",
+        description="Sub-resource name",
+        autocomplete=k8s_list_pod_containers,
         )
     async def logs(
         ctx,
         namespace: str,
         resource: str,
         resource_name: str,
+        subresource_name: str,
     ):
         await ctx.defer(ephemeral=True)  # To defer answer (default: 15min)
         logger.info(
             f'[#{ctx.channel.name}][{ctx.author.name}] '
-            f'/{group_kubectl} logs {resource_name} [{namespace}]'
+            f'/{group_kubectl} logs {resource_name} {subresource_name} [{namespace}]'
             )
 
         try:
@@ -59,13 +66,14 @@ def logs(group_kubectl, bot):
         else:
             pass
 
-        if resource == 'pod' and resource_name is not None:
+        if resource == 'pod' and resource_name is not None and subresource_name is not None:
             try:
                 logger.info(f'[#{ctx.channel.name}][{ctx.author.name}] ├──> K8s Query')
                 log = client.CoreV1Api().read_namespaced_pod_log(
                     name=resource_name,
                     since_seconds=1728000,
                     namespace=namespace,
+                    container=subresource_name,
                     )
                 logger.debug(f'[#{ctx.channel.name}][{ctx.author.name}] ├──> K8s Query Ended')
             except Exception as e:
