@@ -26,6 +26,11 @@ else:
     logger.info('Discord connection OK')
 
 
+@bot.event
+async def on_ready():
+    logger.info(f'Discord on_ready OK ({bot.user})')
+
+
 # Additionnal error detector to answer properly
 @bot.event
 async def on_application_command_error(ctx, error):
