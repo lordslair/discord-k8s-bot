@@ -5,6 +5,8 @@ import discord
 from kubernetes import config, client
 from loguru import logger
 
+from variables import K8S_NAMESPACES
+
 
 def k8s_list_namespaced_pod(ctx: discord.AutocompleteContext):
     try:
@@ -36,8 +38,13 @@ def k8s_list_namespace(ctx: discord.AutocompleteContext):
         return []
     else:
         db_list = []
-        for namespace in namespaces.items:
-            db_list.append(discord.OptionChoice(namespace.metadata.name))
+        if len(K8S_NAMESPACES) > 0:
+            for namespace in namespaces.items:
+                if namespace.metadata.name in K8S_NAMESPACES:
+                    db_list.append(discord.OptionChoice(namespace.metadata.name))
+        else:
+            for namespace in namespaces.items:
+                db_list.append(discord.OptionChoice(namespace.metadata.name))
         return db_list
 
 
