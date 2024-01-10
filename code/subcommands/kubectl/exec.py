@@ -10,8 +10,7 @@ from loguru import logger
 
 from subcommands.kubectl._autocomplete import (
     k8s_list_namespace,
-    k8s_list_namespaced_resources,
-    k8s_list_pod_containers,
+    k8s_list_namespaced_containers,
 )
 from variables import DISCORD_ROLE
 
@@ -30,21 +29,9 @@ def exec(group_kubectl, bot):
         autocomplete=k8s_list_namespace
         )
     @option(
-        "resource",
-        description="Resource type",
-        choices=[
-            discord.OptionChoice('pod'),
-            ],
-        )
-    @option(
-        "resource_name",
-        description="Resource name",
-        autocomplete=k8s_list_namespaced_resources,
-        )
-    @option(
-        "subresource_name",
-        description="Sub-resource name",
-        autocomplete=k8s_list_pod_containers,
+        "container",
+        description="Container to target",
+        autocomplete=k8s_list_namespaced_containers,
         )
     @option(
         "command",
@@ -53,15 +40,16 @@ def exec(group_kubectl, bot):
     async def get(
         ctx,
         namespace: str,
-        resource: str,
-        resource_name: str,
-        subresource_name: str,
+        container: str,
         command: str,
     ):
         await ctx.defer(ephemeral=True)  # To defer answer (default: 15min)
+
+        (pod_name, container_name) = container.split('/')
+
         logger.info(
             f'[#{ctx.channel.name}][{ctx.author.name}] '
-            f'/{group_kubectl} exec {resource_name} {subresource_name} {command} [{namespace}]'
+            f'/{group_kubectl} exec {pod_name} {container_name} {command} [{namespace}]'
             )
 
         try:
@@ -72,9 +60,8 @@ def exec(group_kubectl, bot):
             pass
 
         if (
-            resource == 'pod'
-            and resource_name is not None
-            and subresource_name is not None
+            pod_name is not None
+            and container_name is not None
             and command is not None
         ):
             try:
@@ -82,9 +69,9 @@ def exec(group_kubectl, bot):
                 logger.info(f'[#{ctx.channel.name}][{ctx.author.name}] ├──> K8s Query')
                 exec_stdout = stream(
                     client.CoreV1Api().connect_get_namespaced_pod_exec,
-                    resource_name,
+                    pod_name,
                     namespace,
-                    container=subresource_name,
+                    container=container_name,
                     command=command.split(),
                     stderr=True, stdin=False,
                     stdout=True, tty=False,

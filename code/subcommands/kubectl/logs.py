@@ -10,8 +10,7 @@ from loguru import logger
 
 from subcommands.kubectl._autocomplete import (
     k8s_list_namespace,
-    k8s_list_namespaced_resources,
-    k8s_list_pod_containers,
+    k8s_list_namespaced_containers,
 )
 from variables import DISCORD_ROLE
 
@@ -30,33 +29,22 @@ def logs(group_kubectl, bot):
         autocomplete=k8s_list_namespace,
         )
     @option(
-        "resource",
-        description="Resource type",
-        choices=[
-            discord.OptionChoice('pod'),
-            ],
-        )
-    @option(
-        "resource_name",
-        description="Resource name",
-        autocomplete=k8s_list_namespaced_resources,
-        )
-    @option(
-        "subresource_name",
-        description="Sub-resource name",
-        autocomplete=k8s_list_pod_containers,
+        "container",
+        description="Container to target",
+        autocomplete=k8s_list_namespaced_containers,
         )
     async def logs(
         ctx,
         namespace: str,
-        resource: str,
-        resource_name: str,
-        subresource_name: str,
+        container: str,
     ):
         await ctx.defer(ephemeral=True)  # To defer answer (default: 15min)
+
+        (pod_name, container_name) = container.split('/')
+
         logger.info(
             f'[#{ctx.channel.name}][{ctx.author.name}] '
-            f'/{group_kubectl} logs {resource_name} {subresource_name} [{namespace}]'
+            f'/{group_kubectl} logs {pod_name} {container_name} [{namespace}]'
             )
 
         try:
@@ -66,14 +54,14 @@ def logs(group_kubectl, bot):
         else:
             pass
 
-        if resource == 'pod' and resource_name is not None and subresource_name is not None:
+        if pod_name is not None and container_name is not None:
             try:
                 logger.info(f'[#{ctx.channel.name}][{ctx.author.name}] ├──> K8s Query')
                 log = client.CoreV1Api().read_namespaced_pod_log(
-                    name=resource_name,
+                    name=pod_name,
                     since_seconds=1728000,
                     namespace=namespace,
-                    container=subresource_name,
+                    container=container_name,
                     )
                 logger.debug(f'[#{ctx.channel.name}][{ctx.author.name}] ├──> K8s Query Ended')
             except Exception as e:
@@ -124,7 +112,7 @@ def logs(group_kubectl, bot):
             else:
                 await ctx.respond(
                     embed=discord.Embed(
-                        title=f'kubectl logs {resource_name} [{namespace}]',
+                        title=f'kubectl logs {container_name} [{namespace}]',
                         description='No logs available',
                         colour=discord.Colour.green()
                         ),
