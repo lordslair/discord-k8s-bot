@@ -44,7 +44,7 @@ oauthlib==3.2.2
     # via
     #   kubernetes
     #   requests-oauthlib
-py-cord==2.4.1
+py-cord==2.5.0
     # via -r requirements.in
 pyasn1==0.5.0
     # via
