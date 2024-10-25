@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  namespace: my-namespace
+  name: discord
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: discord
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+      labels:
+        name: discord
+    spec:
+      restartPolicy: Always
+
+      containers:
+      - name: kubectl
+        image: lordslair/discord-k8s-bot:latest
+        imagePullPolicy: Always
+        resources:
+          limits:
+            memory: 128Mi
+            cpu: 100m
+          requests:
+            memory: 64Mi
+            cpu: 50m
+        volumeMounts:
+        - name: kubeconfig-config-volume
+          mountPath: /etc/k8s/
+        env:
+        # Discord env vars
+        - name: DISCORD_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: discord-secret
+              key: discord-token
+        - name: DISCORD_ROLE
+          valueFrom:
+            secretKeyRef:
+              name: discord-secret
+              key: discord-admin-role
+        - name: K8S_NAMESPACES
+          valueFrom:
+            secretKeyRef:
+              name: discord-secret
+              key: discord-k8s-namespaces
+
+      volumes:
+      - name: kubeconfig-config-volume
+        configMap:
+          name: discord-configmap
+          items:
+          - key: kubeconfig
+            path: kubeconfig.yaml
