@@ -254,8 +254,8 @@ def get(group_kubectl, bot):
 
                 for service_port in service.spec.ports:
                     src = f"{service.spec.cluster_ip}:{service_port.port}"
-                    if service.spec.selector:
-                        dst = f"{service.spec.selector['name']}:{service_port.target_port}"
+                    if hasattr(service_port, 'name'):
+                        dst = f"{service_port.name}:{service_port.target_port}"
                     else:
                         dst = f"None:{service_port.target_port}"
                     logger.trace(f"> {src} -> {dst}")
