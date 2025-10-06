@@ -32,7 +32,7 @@ idna==3.10
     # via
     #   requests
     #   yarl
-kubernetes==31.0.0
+kubernetes==34.1.0
     # via -r requirements.in
 loguru==0.7.3
     # via -r requirements.in
@@ -41,9 +41,7 @@ multidict==6.1.0
     #   aiohttp
     #   yarl
 oauthlib==3.2.2
-    # via
-    #   kubernetes
-    #   requests-oauthlib
+    # via requests-oauthlib
 propcache==0.2.0
     # via yarl
 py-cord==2.6.1
