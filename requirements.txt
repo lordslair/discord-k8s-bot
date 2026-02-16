@@ -46,7 +46,7 @@ oauthlib==3.2.2
     #   requests-oauthlib
 propcache==0.2.0
     # via yarl
-py-cord==2.6.1
+py-cord==2.7.1
     # via -r requirements.in
 pyasn1==0.5.0
     # via
@@ -70,6 +70,8 @@ six==1.16.0
     # via
     #   kubernetes
     #   python-dateutil
+typing-extensions==4.15.0
+    # via py-cord
 urllib3==1.26.18
     # via
     #   kubernetes
