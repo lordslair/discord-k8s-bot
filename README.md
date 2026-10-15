@@ -38,13 +38,94 @@ If the file can't be loaded, commands answer `Command aborted: K8s config KO`.
 The bot is designed to handle one kubeconfig file containing one Cluster.  
 Weird behaviour may happen if you don't respect that rule.  
 
-### Screenshots
-
-This needs yet to be done.  
-
 ### SlashCommands
 
-This needs yet to be done. 
+All commands only work in a server (not in DMs), for members with the `DISCORD_ROLE` role.  
+Answers are only visible to the member who used the command.  
+Options offer autocomplete: namespaces (limited to `K8S_NAMESPACES` if set), pods, and containers (shown as `<name or app label>/<container>`).
+
+| Command | Options | Does |
+|---------|---------|------|
+| `/diskube settings` | – | Show the bot version and settings |
+| `/kubectl config` | `show` | Show the cluster name and API server |
+| `/kubectl get` | namespace, `deployments` / `pods` / `pvc` / `services` | List resources and their status |
+| `/kubectl logs` | namespace, container | Show the latest log lines of a container |
+| `/kubectl exec` | namespace, container, command | Run a command in a container |
+| `/kubectl delete` | namespace, `pod`, pod name | Delete a pod |
+| `/kubectl apply` | namespace | Not implemented yet |
+
+#### Examples
+
+`/diskube settings`
+```
+Version:
+> Release: 1.2.3
+> Commit: 11fe7b7
+ENV Vars:
+> KUBECONFIG_FILE: /etc/k8s/kubeconfig.yaml
+> DISCORD_GUILD: None
+> DISCORD_ROLE: Team
+```
+
+`/kubectl config show`
+```
+Cluster:
+> Name: my-cluster
+> Server: https://k8s.example.com:6443
+```
+
+`/kubectl get namespace:backend resource:pods` (🟩 ready / 🟥 not ready, restart count in brackets; CronJob pods are skipped)
+```
+web-5d8f7c6b9-x2x4z
+> 🟩 nginx (0)
+api-7c9d4b8f5-q8w2m
+> 🟥 api (3)
+> 🟩 proxy (1)
+```
+
+`/kubectl get namespace:backend resource:deployments` (available / wanted replicas)
+```
+🟩 web (2/2)
+🟥 api (1/3)
+```
+
+`/kubectl get namespace:backend resource:pvc` (🟩 bound, size; ⬜ otherwise, size or phase)
+```
+🟩 data (10Gi)
+⬜ cache (Pending)
+```
+
+`/kubectl get namespace:backend resource:services` (LoadBalancers also show their address, or `<pending>`)
+```
+web (ClusterIP)
+> 10.0.0.1:80 -> http:8080
+lb (LoadBalancer)
+> 10.0.0.2:443 -> https:8443
+> hostname: lb.example.com
+```
+
+`/kubectl logs namespace:backend container:api/api` (ANSI colours removed, a level emoji per line)
+```
+🟩 INFO  Server started on :8080
+🟦 DEBUG Loaded 12 routes
+🟧 WARN  Slow query (1.2s)
+🟥 ERROR Upstream timeout
+⬜ GET /health 200
+```
+Only the latest lines that fit in one Discord message are shown. When the fetched log (last `K8S_LOGS_TAIL_LINES` lines) doesn't fit, it is also attached as `<pod>-<container>.log`.
+
+`/kubectl exec namespace:backend container:api/api command:ls -l /tmp`
+```
+> ls -l /tmp
+total 0
+```
+
+`/kubectl delete namespace:backend resource:pod resource_name:api-7c9d4b8f5-q8w2m`
+```
+The pod api-7c9d4b8f5-q8w2m was terminated.
+```
+
+Errors are answered in red, for example `Command aborted: K8s Query KO` when the cluster can't be queried.
 
 ### Output on server start
 
