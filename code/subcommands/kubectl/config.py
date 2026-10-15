@@ -75,7 +75,7 @@ def config(group_kubectl, bot):
             await ctx.interaction.edit_original_response(
                 embed=discord.Embed(
                     title=f'kubectl config {subcommand}',
-                    description='YAML file not found (Should be there:{KUBECONFIG_FILE}).',
+                    description=f'YAML file not found (Should be there: `{KUBECONFIG_FILE}`).',
                     colour=discord.Colour.red()
                     )
                 )

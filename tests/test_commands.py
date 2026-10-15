@@ -79,14 +79,15 @@ def test_config_file_not_found(run, ctx, monkeypatch, tmp_path):
     assert result.colour == discord.Colour.red()
 
 
-@pytest.mark.xfail(strict=True, reason='Missing f prefix: shows a literal {KUBECONFIG_FILE}')
 def test_config_file_not_found_shows_path(run, ctx, monkeypatch, tmp_path):
     missing = str(tmp_path / 'missing.yaml')
     monkeypatch.setenv('KUBECONFIG_FILE', missing)
 
     run('kubectl', 'config', 'show')
 
-    assert missing in embed(ctx.interaction.edit_original_response).description
+    assert embed(ctx.interaction.edit_original_response).description == (
+        f'YAML file not found (Should be there: `{missing}`).'
+    )
 
 
 # /kubectl delete
