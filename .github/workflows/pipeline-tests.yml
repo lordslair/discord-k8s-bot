@@ -38,7 +38,7 @@ jobs:
 
     steps:
     - name: Checkout 🛎️
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     # Only pushes publish: PRs (incl. Dependabot/forks) have no Docker Hub secret
     - name: Log in to Docker Hub 🔐
