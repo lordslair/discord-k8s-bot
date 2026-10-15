@@ -84,7 +84,15 @@ docker.io/lordslair/discord-k8s-bot:latest
 
 #### Tests
 
-This needs yet to be done.  
+Tests live in `tests/` and run with [pytest][pytest]. They need no Discord token and no Kubernetes cluster:
+both are faked, so they also run in CI on pull requests.
+```
+$ pip install -r requirements.txt -r requirements-tests.txt
+$ pytest
+```
+
+Known bugs have a test marked `xfail(strict=True)`, describing the expected behaviour.
+Once a bug is fixed, its test starts failing (XPASS): remove the marker.
 
 #### GitHub Actions pipelines
 
@@ -124,4 +132,5 @@ I'm open to requests/comments/ideas/issues in PR section.
    [kubernetes]: <https://github.com/kubernetes/kubernetes>
    [pycord]: <https://github.com/Pycord-Development/pycord>
    [loguru]: <https://github.com/Delgan/loguru>
+   [pytest]: <https://docs.pytest.org>
    [hub]: <https://hub.docker.com/repository/docker/lordslair/discord-k8s-bot>
