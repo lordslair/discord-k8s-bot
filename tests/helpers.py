@@ -104,8 +104,18 @@ def pvcs(*items):
     return V1PersistentVolumeClaimList(items=list(items))
 
 
-def service(name, type='ClusterIP', ports=(('http', 80, 8080),), hostnames=None):
-    """ports: (name, port, target_port). hostnames: LoadBalancer ingress, None if pending."""
+def service(name, type='ClusterIP', ports=(('http', 80, 8080),), hostnames=None, ips=None):
+    """
+    ports: (name, port, target_port).
+    hostnames / ips: LoadBalancer ingress addresses, both None while pending.
+    """
+    if hostnames is None and ips is None:
+        ingress = None
+    else:
+        ingress = (
+            [V1LoadBalancerIngress(hostname=h) for h in hostnames or []]
+            + [V1LoadBalancerIngress(ip=i) for i in ips or []]
+        )
     return V1Service(
         metadata=V1ObjectMeta(name=name),
         spec=V1ServiceSpec(
@@ -114,10 +124,7 @@ def service(name, type='ClusterIP', ports=(('http', 80, 8080),), hostnames=None)
             ports=[V1ServicePort(name=p[0], port=p[1], target_port=p[2]) for p in ports],
         ),
         status=V1ServiceStatus(
-            load_balancer=V1LoadBalancerStatus(
-                ingress=[V1LoadBalancerIngress(hostname=h) for h in hostnames]
-                if hostnames is not None else None,
-            ),
+            load_balancer=V1LoadBalancerStatus(ingress=ingress),
         ),
     )
 

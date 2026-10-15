@@ -90,6 +90,21 @@ def test_deployments(run, ctx, apps_api):
     )
 
 
+def test_deployments_no_available_replica(run, ctx, apps_api):
+    """available_replicas is None, not 0, when no replica is available."""
+    apps_api.list_namespaced_deployment.return_value = deployments(
+        deployment('down', replicas=1, available=None),
+        deployment('scaled-to-zero', replicas=0, available=None),
+    )
+
+    run('kubectl', 'get', 'default', 'deployments')
+
+    assert embed(ctx.interaction.edit_original_response).description == (
+        "🟥  `down (0/1)`\n"
+        "🟩  `scaled-to-zero (0/0)`\n"
+    )
+
+
 def test_deployments_none(run, ctx, apps_api):
     apps_api.list_namespaced_deployment.return_value = deployments()
 
@@ -156,6 +171,21 @@ def test_services(run, ctx, core_api):
         "`lb (LoadBalancer)`\n"
         "> `10.0.0.1:80 -> http:80`\n"
         "> `hostname: lb.example.com`\n"
+    )
+
+
+def test_services_load_balancer_ip(run, ctx, core_api):
+    """Some cloud providers give an IP instead of a hostname."""
+    core_api.list_namespaced_service.return_value = services(
+        service('lb', type='LoadBalancer', ports=[('http', 80, 80)], ips=['203.0.113.10']),
+    )
+
+    run('kubectl', 'get', 'default', 'services')
+
+    assert embed(ctx.interaction.edit_original_response).description == (
+        "`lb (LoadBalancer)`\n"
+        "> `10.0.0.1:80 -> http:80`\n"
+        "> `ip: 203.0.113.10`\n"
     )
 
 

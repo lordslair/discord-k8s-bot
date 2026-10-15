@@ -198,11 +198,13 @@ def get(group_kubectl, bot):
             await ctx.interaction.edit_original_response(embed=embed)
             # We loop over pods to have detailed infos
             for deployment in resources.items:
-                if deployment.spec.replicas == deployment.status.available_replicas:
+                # available_replicas is None (not 0) when no replica is available
+                available = deployment.status.available_replicas or 0
+                if deployment.spec.replicas == available:
                     status = '🟩 '
                 else:
                     status = '🟥 '
-                count = f"{deployment.status.available_replicas}/{deployment.spec.replicas}"
+                count = f"{available}/{deployment.spec.replicas}"
                 description += f"{status} `{deployment.metadata.name} ({count})`\n"
                 logger.trace(f"{status} {deployment.metadata.name} ({count})")
 
@@ -272,8 +274,13 @@ def get(group_kubectl, bot):
                         logger.trace("> hostname: <pending>")
                         description += "> `hostname: <pending>`\n"
                     for ingress in ingresses:
-                        logger.trace(f"> hostname: {ingress.hostname}")
-                        description += f"> `hostname: {ingress.hostname}`\n"
+                        # Depending on the cloud provider, the address is a hostname or an IP
+                        if ingress.hostname:
+                            address = f"hostname: {ingress.hostname}"
+                        else:
+                            address = f"ip: {ingress.ip}"
+                        logger.trace(f"> {address}")
+                        description += f"> `{address}`\n"
 
             # We update the Embed with the pod result
             embed = discord.Embed(

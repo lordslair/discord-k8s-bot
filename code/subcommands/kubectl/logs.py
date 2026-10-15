@@ -12,6 +12,7 @@ from loguru import logger
 from subcommands.kubectl._autocomplete import (
     k8s_list_namespace,
     k8s_list_namespaced_containers,
+    split_container,
 )
 from variables import DISCORD_ROLE, K8S_LOGS_TAIL_LINES
 
@@ -87,7 +88,17 @@ def logs(group_kubectl, bot):
     ):
         await ctx.defer(ephemeral=True)  # To defer answer (default: 15min)
 
-        (pod_name, container_name) = container.split('/')
+        try:
+            (pod_name, container_name) = split_container(container)
+        except ValueError as e:
+            logger.error(f'[#{ctx.channel.name}][{ctx.author.name}] └──> Invalid container [{e}]')
+            await ctx.respond(
+                embed=discord.Embed(
+                    description=f'Invalid container `{container}`: pick one from the list.',
+                    colour=discord.Colour.red()
+                    )
+                )
+            return
 
         logger.info(
             f'[#{ctx.channel.name}][{ctx.author.name}] '

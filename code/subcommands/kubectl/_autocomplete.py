@@ -56,6 +56,18 @@ def k8s_list_namespaced_containers(ctx: discord.AutocompleteContext):
         return db_list
 
 
+def split_container(value):
+    """
+    Split a '<pod>/<container>' value, as built by k8s_list_namespaced_containers.
+
+    Raises ValueError for anything else (e.g. a value typed by the user).
+    """
+    pod_name, sep, container_name = value.partition('/')
+    if not (pod_name and sep and container_name) or '/' in container_name:
+        raise ValueError(f'expected <pod>/<container>, got {value!r}')
+    return pod_name, container_name
+
+
 def k8s_list_namespaced_resources(ctx: discord.AutocompleteContext):
     if ctx.options["resource"] == 'pod':
         return k8s_list_namespaced_pod(ctx)

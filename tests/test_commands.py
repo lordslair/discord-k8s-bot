@@ -144,3 +144,18 @@ def test_exec_error(run, ctx, stream):
     result = embed(ctx.respond)
     assert result.description == 'K8s exec KO [boom]'
     assert result.colour == discord.Colour.red()
+
+
+@pytest.mark.parametrize('name, args', [
+    ('exec', ('default', 'nginx', 'ls')),
+    ('logs', ('default', 'nginx')),
+])
+def test_invalid_container(run, ctx, core_api, name, args):
+    """A value typed by the user instead of picked from the list."""
+    run('kubectl', name, *args)
+
+    result = embed(ctx.respond)
+    assert result.description == 'Invalid container `nginx`: pick one from the list.'
+    assert result.colour == discord.Colour.red()
+    core_api.read_namespaced_pod_log.assert_not_called()
+    core_api.connect_get_namespaced_pod_exec.assert_not_called()

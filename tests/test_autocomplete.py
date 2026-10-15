@@ -2,6 +2,7 @@
 """Autocomplete callbacks: namespaces, pods and containers lists."""
 
 import discord
+import pytest
 
 from unittest.mock import MagicMock
 
@@ -110,3 +111,15 @@ def test_containers_api_error(core_api):
     core_api.list_namespaced_pod.side_effect = Exception('boom')
 
     assert autocomplete.k8s_list_namespaced_containers(actx(namespace='default')) == []
+
+
+# '<pod>/<container>' values
+
+def test_split_container():
+    assert autocomplete.split_container('web-abc/nginx') == ('web-abc', 'nginx')
+
+
+@pytest.mark.parametrize('value', ['nginx', 'web-abc/', '/nginx', 'a/b/c', ''])
+def test_split_container_invalid(value):
+    with pytest.raises(ValueError):
+        autocomplete.split_container(value)
