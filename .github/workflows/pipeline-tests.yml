@@ -43,7 +43,7 @@ jobs:
     # Only pushes publish: PRs (incl. Dependabot/forks) have no Docker Hub secret
     - name: Log in to Docker Hub 🔐
       if: github.event_name == 'push'
-      uses: docker/login-action@v3
+      uses: docker/login-action@v4
       with:
         username: ${{ vars.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
