@@ -146,7 +146,9 @@ def get(group_kubectl, bot):
                     status = '🟩 '
                 else:
                     status = '⬜ '
-                label = f"{pvc.metadata.name} ({pvc.status.capacity['storage']})"
+                # capacity is None until the PVC is bound: show its phase instead
+                capacity = (pvc.status.capacity or {}).get('storage', pvc.status.phase)
+                label = f"{pvc.metadata.name} ({capacity})"
                 description += f"{status} `{label}`\n"
                 logger.trace(f"{status} {label}")
 

@@ -126,16 +126,15 @@ def test_pvc_none(run, ctx, core_api):
     assert embed(ctx.respond).description == 'No pvc were found for this namespace'
 
 
-@pytest.mark.xfail(strict=True, raises=TypeError,
-                   reason='Pending PVC: status.capacity is None, not subscriptable')
 def test_pvc_pending(run, ctx, core_api):
+    """No capacity until bound: the phase is shown instead."""
     core_api.list_namespaced_persistent_volume_claim.return_value = pvcs(
         pvc('new', phase='Pending', storage=None),
     )
 
     run('kubectl', 'get', 'default', 'pvc')
 
-    assert 'new' in embed(ctx.interaction.edit_original_response).description
+    assert embed(ctx.interaction.edit_original_response).description == "⬜  `new (Pending)`\n"
 
 
 # Services
