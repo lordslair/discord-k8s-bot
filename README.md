@@ -86,6 +86,14 @@ docker.io/lordslair/discord-k8s-bot:latest
 
 This needs yet to be done.  
 
+#### GitHub Actions pipelines
+
+- **Pipeline Tests**: on every push / PR to `master`, runs lint (flake8) and tests (pytest), then builds the image.
+Only pushes to `master` publish it to Docker Hub, as `edge` and the short commit SHA.
+- **Pipeline Release**: on push of a `v*` tag, runs lint and tests, then publishes `X.Y.Z`, `X.Y`, the short commit SHA and `latest`.
+
+Details and conventions: [.github/workflows/WORKFLOWS.md](.github/workflows/WORKFLOWS.md)
+
 #### Disclaimer/Reminder
 
 > Always store somewhere safe your DISCORD_TOKEN.  

@@ -1,5 +1,5 @@
-# This workflow will install Python dependencies, run tests with a single version of Python
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+# Release pipeline, run on push of a v* tag (e.g. v1.2.3).
+# Lint + tests, then builds and pushes {{version}}, {{major}}.{{minor}}, short SHA and latest.
 
 name: Pipeline Release
 
@@ -11,55 +11,25 @@ on:
 permissions:
   contents: read
 
+# Releases run one at a time, so an older tag can never push latest after a newer one.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 jobs:
-  app-pytest:
-    runs-on: ubuntu-latest
+  lint:
+    uses: ./.github/workflows/lint.yml
 
-    strategy:
-      matrix:
-        python-version: [ "3.10", "3.11" ]
-
-    steps:
-    - name: Checkout 🛎️
-      uses: actions/checkout@v6
-
-    - name: Set up Python ${{ matrix.python-version }} 🐍
-      uses: actions/setup-python@v6
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Install requirements ⏬
-      run: |
-        echo "--- Installing PIP"
-        python -m pip install --upgrade pip
-        echo "--- Installing PyTest prerequisites"
-        pip install pytest flake8
-        echo "--- Installing requirements"
-        if [ -f requirements.txt ]; \
-          then pip install -r requirements.txt; \
-        fi
-
-    - name: Lint with flake8 📝
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        echo "--- Linting with flake8"
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-
-    - name: Test with PyTest ⚙️
-      env:
-          LOGURU_LEVEL: ${{ vars.LOGURU_LEVEL }}
-      run: |
-        echo "--- Starting PyTest"
-
+  tests:
+    uses: ./.github/workflows/tests.yml
 
   build-push:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
 
     needs:
-    - app-pytest
-
-    # We need to have a successful app-pytest before
-    if: ${{ needs.app-pytest.result == 'success' }}
+    - lint
+    - tests
 
     steps:
     - name: Checkout 🛎️
@@ -75,12 +45,18 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ vars.DOCKER_USERNAME }}/${{ vars.DOCKER_IMAGE }}
+        images: ${{ vars.DOCKER_USERNAME }}/${{ github.event.repository.name }}
         tags: |
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix=,suffix=,format=short
           type=raw,value=latest
 
+    - name: Set up Docker Buildx 🐳
+      uses: docker/setup-buildx-action@v3
+
+    # Read-only cache: a tag's cache could only be reused by that same tag,
+    # so reuse the one master's edge builds already filled.
     - name: Build 🏗️ & Push to Docker Hub 🚀
       uses: docker/build-push-action@v6
       with:
@@ -88,3 +64,4 @@ jobs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
