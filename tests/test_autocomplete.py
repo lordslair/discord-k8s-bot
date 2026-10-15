@@ -34,8 +34,6 @@ def test_namespaces_filtered_by_k8s_namespaces(monkeypatch, core_api):
     assert names(autocomplete.k8s_list_namespace(actx())) == ['default', 'prod']
 
 
-@pytest.mark.xfail(strict=True, raises=TypeError,
-                   reason='K8S_NAMESPACES unset is None: len(None) raises TypeError')
 def test_namespaces_all_when_k8s_namespaces_unset(monkeypatch, core_api):
     monkeypatch.setattr(autocomplete, 'K8S_NAMESPACES', None)
     core_api.list_namespace.return_value = namespaces('default', 'kube-system')

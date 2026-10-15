@@ -14,6 +14,10 @@ Mandatory ones:
 Optional ones:
 - `DISCORD_GUILD`: The Discord GuildId to restrict bot propagation. (Defaults: `None`)
 
+Kubernetes variables :
+Optional ones:
+- `K8S_NAMESPACES`: Comma-separated namespaces offered in commands autocomplete, e.g. `default,prod`. (Defaults: `None`, all namespaces)
+
 ENV global variables :
 - `LOGURU_LEVEL`: Minimal level for log output (Default: `DEBUG`)  
 

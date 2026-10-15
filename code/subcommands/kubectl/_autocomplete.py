@@ -68,7 +68,7 @@ def k8s_list_namespace(ctx: discord.AutocompleteContext):
         return []
     else:
         db_list = []
-        if len(K8S_NAMESPACES) > 0:
+        if K8S_NAMESPACES:
             for namespace in namespaces.items:
                 if namespace.metadata.name in K8S_NAMESPACES:
                     db_list.append(discord.OptionChoice(namespace.metadata.name))
