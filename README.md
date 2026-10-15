@@ -43,7 +43,8 @@ Weird behaviour may happen if you don't respect that rule.
 All commands only work in a server (not in DMs), for members with the `DISCORD_ROLE` role.  
 Answers are only visible to the member who used the command.  
 Options offer autocomplete: namespaces (limited to `K8S_NAMESPACES` if set), pods, and containers (shown as `<name or app label>/<container>`).  
-Discord shows 25 suggestions at most: type part of a name to narrow the list.
+Discord shows 25 suggestions at most: type part of a name to narrow the list.  
+Pod and container suggestions are cached for 5 seconds per namespace, so a pod created or deleted outside the bot just now may take a few seconds to show up (or disappear) there. A pod deleted with `/kubectl delete` disappears at once. Commands themselves always query the cluster.
 
 | Command | Options | Does |
 |---------|---------|------|

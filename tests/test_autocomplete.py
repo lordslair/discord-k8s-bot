@@ -3,6 +3,7 @@
 
 import asyncio
 import threading
+import time
 
 import discord
 import pytest
@@ -14,12 +15,17 @@ from helpers import module, namespaces, pod, pods
 autocomplete = module('subcommands.kubectl._autocomplete')
 
 
-def complete(callback, typed='', **options):
-    """Run an autocomplete callback, as py-cord does, with what the user typed so far."""
+def actx(typed='', **options):
+    """Fake AutocompleteContext: options already filled, and what the user typed so far."""
     ctx = MagicMock()
     ctx.options = options
     ctx.value = typed
-    return asyncio.run(callback(ctx))
+    return ctx
+
+
+def complete(callback, typed='', **options):
+    """Run one autocomplete callback, as py-cord does."""
+    return asyncio.run(callback(actx(typed, **options)))
 
 
 def names(choices):
@@ -155,6 +161,95 @@ def test_typed_text_matches_container_value(core_api):
         autocomplete.k8s_list_namespaced_containers, typed='abc', namespace='default',
     )
     assert values(choices) == ['web-abc/nginx']
+
+
+# Pod lists cache: one cluster call per burst of keystrokes
+
+def requests(*calls):
+    """Run several autocomplete requests one after the other, in one event loop (as the bot)."""
+    async def _run():
+        return [await callback(actx(**options)) for callback, options in calls]
+    return asyncio.run(_run())
+
+
+@pytest.fixture
+def clock(monkeypatch):
+    """Controllable time for the cache: clock[0] += 5 moves 5 seconds forward."""
+    now = [1000.0]
+    monkeypatch.setattr(autocomplete, '_now', lambda: now[0])
+    return now
+
+
+def test_pods_cache_shared_by_pods_and_containers(core_api):
+    core_api.list_namespaced_pod.return_value = pods(pod('web-1'))
+
+    requests(
+        (autocomplete.k8s_list_namespaced_pod, {'namespace': 'default', 'typed': 'w'}),
+        (autocomplete.k8s_list_namespaced_pod, {'namespace': 'default', 'typed': 'we'}),
+        (autocomplete.k8s_list_namespaced_containers, {'namespace': 'default'}),
+    )
+
+    core_api.list_namespaced_pod.assert_called_once_with('default')
+
+
+def test_pods_cache_per_namespace(core_api):
+    core_api.list_namespaced_pod.return_value = pods(pod('web-1'))
+
+    requests(
+        (autocomplete.k8s_list_namespaced_pod, {'namespace': 'default'}),
+        (autocomplete.k8s_list_namespaced_pod, {'namespace': 'prod'}),
+        (autocomplete.k8s_list_namespaced_pod, {'namespace': 'default'}),
+    )
+
+    assert [c.args for c in core_api.list_namespaced_pod.call_args_list] == [
+        ('default',), ('prod',),
+    ]
+
+
+def test_pods_cache_expires(core_api, clock):
+    core_api.list_namespaced_pod.return_value = pods(pod('web-1'))
+    pod_request = (autocomplete.k8s_list_namespaced_pod, {'namespace': 'default'})
+
+    async def _run():
+        await pod_request[0](actx(**pod_request[1]))
+        clock[0] += autocomplete.PODS_CACHE_TTL - 0.1  # still fresh
+        await pod_request[0](actx(**pod_request[1]))
+        clock[0] += 0.1                                # expired
+        await pod_request[0](actx(**pod_request[1]))
+    asyncio.run(_run())
+
+    assert core_api.list_namespaced_pod.call_count == 2
+
+
+def test_pods_cache_ignores_errors(core_api):
+    core_api.list_namespaced_pod.side_effect = [Exception('boom'), pods(pod('web-1'))]
+
+    first, second = requests(
+        (autocomplete.k8s_list_namespaced_pod, {'namespace': 'default'}),
+        (autocomplete.k8s_list_namespaced_pod, {'namespace': 'default'}),
+    )
+
+    assert first == []
+    assert names(second) == ['web-1']
+    assert core_api.list_namespaced_pod.call_count == 2
+
+
+def test_pods_cache_concurrent_requests_share_one_call(core_api):
+    """Keystrokes arriving while the cluster is still answering wait for the same call."""
+    def slow_list(namespace):
+        time.sleep(0.2)
+        return pods(pod('web-1'))
+    core_api.list_namespaced_pod.side_effect = slow_list
+
+    async def _run():
+        return await asyncio.gather(*[
+            autocomplete.k8s_list_namespaced_pod(actx(namespace='default', typed=t))
+            for t in ('w', 'we', 'web')
+        ])
+    results = asyncio.run(_run())
+
+    assert [names(r) for r in results] == [['web-1']] * 3
+    core_api.list_namespaced_pod.assert_called_once_with('default')
 
 
 # Never block the event loop: K8s calls run in another thread

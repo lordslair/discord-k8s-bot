@@ -3,10 +3,12 @@
 # Autocomplete callbacks. Discord drops the request if it isn't answered within ~3s,
 # and sends a new one on (almost) every keystroke, so:
 # - the K8s calls run in a thread, never blocking the event loop;
-# - choices are filtered by what the user typed, as Discord shows 25 at most.
+# - choices are filtered by what the user typed, as Discord shows 25 at most;
+# - pod lists are cached a few seconds.
 
 import asyncio
 import discord
+import time
 
 from kubernetes import config, client
 from loguru import logger
@@ -17,10 +19,35 @@ from variables import K8S_NAMESPACES
 # Discord's maximum number of autocomplete choices
 MAX_CHOICES = 25
 
+# Pod lists are reused for a few seconds, per namespace: a burst of keystrokes
+# makes one cluster call. Commands always query the cluster, never this cache.
+PODS_CACHE_TTL = 5  # seconds
+_pods_cache = {}  # namespace -> (time, task listing its pods)
+_now = time.monotonic
+
 
 def _list_pods(namespace):
     config.load_kube_config(kubeconfig_file())
     return client.CoreV1Api().list_namespaced_pod(namespace)
+
+
+async def _cached_pods(namespace):
+    cached = _pods_cache.get(namespace)
+    if cached is None or _now() - cached[0] >= PODS_CACHE_TTL:
+        # The task (not its result) is cached: requests arriving while the cluster
+        # is still answering wait for this same call instead of starting new ones
+        task = asyncio.ensure_future(asyncio.to_thread(_list_pods, namespace))
+        cached = (_now(), task)
+        _pods_cache[namespace] = cached
+
+    try:
+        # shield: a cancelled request must not cancel the call others are waiting for
+        return await asyncio.shield(cached[1])
+    except Exception:
+        # Errors are not cached: the next request tries again
+        if _pods_cache.get(namespace) is cached:
+            del _pods_cache[namespace]
+        raise
 
 
 def _list_namespaces():
@@ -37,9 +64,14 @@ def _filter(ctx: discord.AutocompleteContext, choices):
     ][:MAX_CHOICES]
 
 
+def forget_pods(namespace):
+    """Drop a namespace's cached pod list, e.g. once a pod was deleted."""
+    _pods_cache.pop(namespace, None)
+
+
 async def k8s_list_namespaced_pod(ctx: discord.AutocompleteContext):
     try:
-        pods = await asyncio.to_thread(_list_pods, ctx.options["namespace"])
+        pods = await _cached_pods(ctx.options["namespace"])
     except Exception as e:
         logger.error(f'K8s Query KO [{e}]')
         return []
@@ -49,7 +81,7 @@ async def k8s_list_namespaced_pod(ctx: discord.AutocompleteContext):
 
 async def k8s_list_namespaced_containers(ctx: discord.AutocompleteContext):
     try:
-        pods = await asyncio.to_thread(_list_pods, ctx.options["namespace"])
+        pods = await _cached_pods(ctx.options["namespace"])
     except Exception as e:
         logger.error(f'K8s Query KO [{e}]')
         return []

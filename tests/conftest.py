@@ -10,6 +10,7 @@ No test talks to Discord or Kubernetes:
 """
 
 import asyncio
+import importlib
 import os
 
 import discord
@@ -29,6 +30,15 @@ from subcommands import diskube, kubectl  # noqa: E402
 def no_kubeconfig(monkeypatch):
     """Never read a real kubeconfig file."""
     monkeypatch.setattr(kubernetes.config, 'load_kube_config', MagicMock())
+
+
+@pytest.fixture(autouse=True)
+def empty_pods_cache():
+    """Autocomplete pod lists cache: never shared between tests (nor their event loops)."""
+    cache = importlib.import_module('subcommands.kubectl._autocomplete')._pods_cache
+    cache.clear()
+    yield
+    cache.clear()
 
 
 @pytest.fixture

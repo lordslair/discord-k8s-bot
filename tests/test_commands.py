@@ -130,6 +130,26 @@ def test_delete_pod(run, ctx, core_api):
     assert result.description == 'The pod `web-abc` was terminated.'
 
 
+def test_delete_forgets_cached_pods(run, core_api):
+    """The deleted pod disappears from autocomplete at once, not after the cache delay."""
+    cache = module('subcommands.kubectl._autocomplete')._pods_cache
+    cache.update({'default': 'pods list', 'prod': 'pods list'})
+
+    run('kubectl', 'delete', 'default', 'pod', 'web-abc')
+
+    assert cache == {'prod': 'pods list'}
+
+
+def test_delete_error_keeps_cached_pods(run, core_api):
+    cache = module('subcommands.kubectl._autocomplete')._pods_cache
+    cache.update({'default': 'pods list'})
+    core_api.delete_namespaced_pod.side_effect = Exception('boom')
+
+    run('kubectl', 'delete', 'default', 'pod', 'web-abc')
+
+    assert cache == {'default': 'pods list'}
+
+
 def test_delete_api_error(run, ctx, core_api):
     core_api.delete_namespaced_pod.side_effect = Exception('boom')
 

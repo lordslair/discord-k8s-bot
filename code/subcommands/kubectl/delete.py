@@ -9,6 +9,7 @@ from kubernetes import client
 from loguru import logger
 
 from subcommands.kubectl._autocomplete import (
+    forget_pods,
     k8s_list_namespace,
     k8s_list_namespaced_resources,
 )
@@ -73,6 +74,8 @@ def delete(group_kubectl, bot):
                 return
             else:
                 logger.info(f'[#{ctx.channel.name}][{ctx.author.name}] └──> K8s Query OK')
+                # The deleted pod must not be offered by autocomplete anymore
+                forget_pods(namespace)
 
             # We got the resources object, we can start working
             embed = discord.Embed(
