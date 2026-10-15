@@ -29,3 +29,23 @@ else:
 if K8S_NAMESPACES:
     K8S_NAMESPACES = K8S_NAMESPACES.split(",")
     logger.success('K8S_NAMESPACES is set')
+
+# Number of log lines fetched by /kubectl logs
+K8S_LOGS_TAIL_LINES_DEFAULT = 200
+K8S_LOGS_TAIL_LINES = os.environ.get("K8S_LOGS_TAIL_LINES", None)
+
+if K8S_LOGS_TAIL_LINES:
+    try:
+        K8S_LOGS_TAIL_LINES = int(K8S_LOGS_TAIL_LINES)
+        if K8S_LOGS_TAIL_LINES < 1:
+            raise ValueError('must be >= 1')
+    except ValueError as e:
+        logger.warning(
+            f'K8S_LOGS_TAIL_LINES is invalid [{e}], '
+            f'using default ({K8S_LOGS_TAIL_LINES_DEFAULT})'
+            )
+        K8S_LOGS_TAIL_LINES = K8S_LOGS_TAIL_LINES_DEFAULT
+    else:
+        logger.success('K8S_LOGS_TAIL_LINES is set')
+else:
+    K8S_LOGS_TAIL_LINES = K8S_LOGS_TAIL_LINES_DEFAULT

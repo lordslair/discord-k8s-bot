@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 
 import discord
+import io
 import re
 
 from discord.commands import option
@@ -12,7 +13,53 @@ from subcommands.kubectl._autocomplete import (
     k8s_list_namespace,
     k8s_list_namespaced_containers,
 )
-from variables import DISCORD_ROLE
+from variables import DISCORD_ROLE, K8S_LOGS_TAIL_LINES
+
+# Discord message limit, minus the ``` wrapper on both sides
+MESSAGE_BUDGET = 2000 - 6
+# ANSI sequences (ex: colors)
+ANSI_ESCAPE = re.compile(r'\x1b[^m]*m')
+
+
+def level_prefix(line):
+    if 'WARN' in line.upper():
+        return '🟧'
+    elif 'ERROR' in line.upper():
+        return '🟥'
+    elif 'INFO' in line.upper():
+        return '🟩'
+    elif 'DEBUG' in line.upper():
+        return '🟦'
+    elif 'TRACE' in line.upper():
+        return '🟦'
+    else:
+        return '⬜'
+
+
+def format_logs(log):
+    """
+    Latest log lines that fit in one Discord message, oldest first.
+
+    Returns (content, complete): complete is False when lines were left out
+    or the latest line had to be shortened.
+    """
+    lines = []
+    length = 0
+    complete = True
+    for line in reversed(log.splitlines()):
+        prefix = f'{level_prefix(line)} '
+        newline = f'{prefix}{line}\n'
+        if length + len(newline) > MESSAGE_BUDGET:
+            complete = False
+            if not lines:
+                # Even the latest line alone is too long: keep its start
+                room = MESSAGE_BUDGET - len(prefix) - len('…\n')
+                lines.append(f'{prefix}{line[:room]}…\n')
+            break
+        lines.append(newline)
+        length += len(newline)
+
+    return '```' + ''.join(reversed(lines)) + '```', complete
 
 
 def logs(group_kubectl, bot):
@@ -59,9 +106,9 @@ def logs(group_kubectl, bot):
                 logger.info(f'[#{ctx.channel.name}][{ctx.author.name}] ├──> K8s Query')
                 log = client.CoreV1Api().read_namespaced_pod_log(
                     name=pod_name,
-                    since_seconds=1728000,
                     namespace=namespace,
                     container=container_name,
+                    tail_lines=K8S_LOGS_TAIL_LINES,
                     )
                 logger.debug(f'[#{ctx.channel.name}][{ctx.author.name}] ├──> K8s Query Ended')
             except Exception as e:
@@ -76,38 +123,19 @@ def logs(group_kubectl, bot):
                 logger.info(f'[#{ctx.channel.name}][{ctx.author.name}] └──> K8s Query OK')
 
             if log != '':
-                # We do this to filter out ANSI sequences (ex: colors)
-                reaesc = re.compile(r'\x1b[^m]*m')
-                log_purged = reaesc.sub('', log)
+                log_purged = ANSI_ESCAPE.sub('', log)
+                content, complete = format_logs(log_purged)
 
-                # We do this to have the latest lines, not the first
-                lines_first_to_last = []
-                content_length = 0  # to count the final message length
-                for line in reversed(log_purged.splitlines()):
-                    if content_length + len(line) < 2000:
-                        if 'WARN' in line.upper():
-                            newline = f'🟧 {line}\n'
-                        elif 'ERROR' in line.upper():
-                            newline = f'🟥 {line}\n'
-                        elif 'INFO' in line.upper():
-                            newline = f'🟩 {line}\n'
-                        elif 'DEBUG' in line.upper():
-                            newline = f'🟦 {line}\n'
-                        elif 'TRACE' in line.upper():
-                            newline = f'🟦 {line}\n'
-                        else:
-                            newline = f'⬜ {line}\n'
-
-                        content_length += len(newline)
-                        lines_first_to_last.append(newline)
-                    else:
-                        break
-
-                content = ''
-                for line in reversed(lines_first_to_last):
-                    content += line
+                if complete:
+                    await ctx.interaction.edit_original_response(content=content)
+                else:
+                    # Not everything fits in the message: attach the fetched log as a file
                     await ctx.interaction.edit_original_response(
-                        content=f'```{content}```',
+                        content=content,
+                        file=discord.File(
+                            io.BytesIO(log_purged.encode()),
+                            filename=f'{pod_name}-{container_name}.log',
+                            ),
                         )
             else:
                 await ctx.respond(

@@ -17,6 +17,7 @@ Optional ones:
 Kubernetes variables :
 Optional ones:
 - `K8S_NAMESPACES`: Comma-separated namespaces offered in commands autocomplete, e.g. `default,prod`. (Defaults: `None`, all namespaces)
+- `K8S_LOGS_TAIL_LINES`: Number of log lines fetched by `/kubectl logs`. The latest ones that fit are shown in the message, and when they don't all fit, all fetched lines are attached as a `.log` file. (Defaults: `200`)
 
 ENV global variables :
 - `LOGURU_LEVEL`: Minimal level for log output (Default: `DEBUG`)  
