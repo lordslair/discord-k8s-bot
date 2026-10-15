@@ -22,7 +22,7 @@ def settings(group_diskube, bot):
     ):
         await ctx.defer(ephemeral=True)  # To defer answer (default: 15min)
         logger.info(
-            f'[#{ctx.channel.name}][{ctx.channel.name}] /{group_diskube} settings'
+            f'[#{ctx.channel.name}][{ctx.author.name}] /{group_diskube} settings'
             )
 
         KUBECONFIG_FILE = os.environ.get("KUBECONFIG_FILE", "/etc/k8s/kubeconfig.yaml")

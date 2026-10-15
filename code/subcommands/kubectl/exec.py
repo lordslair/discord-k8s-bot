@@ -39,7 +39,7 @@ def exec(group_kubectl, bot):
         "command",
         description="Command to execute",
         )
-    async def get(
+    async def exec(
         ctx,
         namespace: str,
         container: str,
