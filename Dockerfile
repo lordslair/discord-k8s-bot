@@ -23,5 +23,12 @@ WORKDIR /code
 # Set user
 USER discord
 
+# Release version and commit, shown by /diskube settings (set by the CI build)
+# Kept last: COMMIT changes on every build and would invalidate the layers after it
+ARG VERSION=dev
+ARG COMMIT=unknown
+ENV DISKUBE_VERSION=${VERSION} \
+    DISKUBE_COMMIT=${COMMIT}
+
 # Entry point
 ENTRYPOINT ["/code/main.py"]

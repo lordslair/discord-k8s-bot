@@ -24,6 +24,32 @@ def test_settings(run, ctx, monkeypatch):
     assert '> DISCORD_GUILD: `1234`' in result.description
 
 
+def test_settings_version(run, ctx, monkeypatch):
+    monkeypatch.setenv('DISKUBE_VERSION', '1.2.3')
+    monkeypatch.setenv('DISKUBE_COMMIT', '0123456789abcdef0123456789abcdef01234567')
+
+    run('diskube', 'settings')
+
+    assert embed(ctx.respond).description.startswith(
+        "Version:\n"
+        "> Release: `1.2.3`\n"
+        "> Commit: `0123456`\n"
+    )
+
+
+def test_settings_version_local_build(run, ctx, monkeypatch):
+    monkeypatch.delenv('DISKUBE_VERSION', raising=False)
+    monkeypatch.delenv('DISKUBE_COMMIT', raising=False)
+
+    run('diskube', 'settings')
+
+    assert embed(ctx.respond).description.startswith(
+        "Version:\n"
+        "> Release: `dev`\n"
+        "> Commit: `unknown`\n"
+    )
+
+
 # /kubectl apply
 
 def test_apply_not_implemented(run, ctx):

@@ -52,6 +52,15 @@ Both pipelines share the same `build-push` structure: checkout → Docker Hub lo
 
 The image is `${{ vars.DOCKER_USERNAME }}/${{ github.event.repository.name }}`: the Docker Hub account plus the GitHub repository name, so the same block works in any repository without changes. Renaming the repository changes the image name.
 
+Both pipelines pass two build args, so the app can show what it runs:
+
+| Build arg | Value | Example |
+|-----------|-------|---------|
+| `VERSION` | `steps.meta.outputs.version` | `1.2.3` (release), `edge` (default branch) |
+| `COMMIT` | `github.sha` | full commit SHA |
+
+The `Dockerfile` declares them with local-build defaults (`ARG VERSION=dev`, `ARG COMMIT=unknown`) and copies them into `ENV`. Declare them **last**: `COMMIT` changes on every build and invalidates the cache of every layer after it. A `Dockerfile` that doesn't use them ignores them.
+
 ### Pipeline Tests ([pipeline-tests.yml](pipeline-tests.yml))
 
 | Event | Lint + tests | Build | Push | Tags |

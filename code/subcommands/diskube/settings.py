@@ -28,7 +28,14 @@ def settings(group_diskube, bot):
         KUBECONFIG_FILE = os.environ.get("KUBECONFIG_FILE", "/etc/k8s/kubeconfig.yaml")
         DISCORD_GUILD = os.environ.get("DISCORD_GUILD", None)
 
+        # Set at build time (see Dockerfile), dev/unknown for a local build
+        DISKUBE_VERSION = os.environ.get("DISKUBE_VERSION", "dev")
+        DISKUBE_COMMIT = os.environ.get("DISKUBE_COMMIT", "unknown")[:7]
+
         description = (
+            f"Version:\n"
+            f"> Release: `{DISKUBE_VERSION}`\n"
+            f"> Commit: `{DISKUBE_COMMIT}`\n"
             f"ENV Vars:\n"
             f"> KUBECONFIG_FILE: `{KUBECONFIG_FILE}`\n"
             f"> DISCORD_GUILD: `{DISCORD_GUILD}`\n"
