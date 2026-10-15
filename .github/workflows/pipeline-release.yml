@@ -53,7 +53,7 @@ jobs:
           type=raw,value=latest
 
     - name: Set up Docker Buildx 🐳
-      uses: docker/setup-buildx-action@v3
+      uses: docker/setup-buildx-action@v4
 
     # Read-only cache: a tag's cache could only be reused by that same tag,
     # so reuse the one master's edge builds already filled.
