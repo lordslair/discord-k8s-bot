@@ -28,7 +28,8 @@ else:
     sys.exit(1)
 
 if K8S_NAMESPACES:
-    K8S_NAMESPACES = K8S_NAMESPACES.split(",")
+    # "default, prod," -> ['default', 'prod']
+    K8S_NAMESPACES = [n.strip() for n in K8S_NAMESPACES.split(",") if n.strip()]
     logger.success('K8S_NAMESPACES is set')
 
 # Number of log lines fetched by /kubectl logs

@@ -34,11 +34,19 @@ def values(choices):
 
 # Namespaces
 
-def test_namespaces_filtered_by_k8s_namespaces(monkeypatch, core_api):
-    monkeypatch.setattr(autocomplete, 'K8S_NAMESPACES', ['default', 'prod'])
-    core_api.list_namespace.return_value = namespaces('default', 'kube-system', 'prod')
+def test_namespaces_from_k8s_namespaces_without_cluster_call(monkeypatch, core_api):
+    """Instant, and works without the right to list namespaces cluster-wide."""
+    monkeypatch.setattr(autocomplete, 'K8S_NAMESPACES', ['prod', 'default'])
+    core_api.list_namespace.side_effect = Exception('403 Forbidden')
 
-    assert names(complete(autocomplete.k8s_list_namespace)) == ['default', 'prod']
+    assert names(complete(autocomplete.k8s_list_namespace)) == ['prod', 'default']
+    core_api.list_namespace.assert_not_called()
+
+
+def test_namespaces_from_k8s_namespaces_filtered_by_typed_text(monkeypatch):
+    monkeypatch.setattr(autocomplete, 'K8S_NAMESPACES', ['default', 'prod', 'preprod'])
+
+    assert names(complete(autocomplete.k8s_list_namespace, typed='PROD')) == ['prod', 'preprod']
 
 
 def test_namespaces_all_when_k8s_namespaces_unset(monkeypatch, core_api):
@@ -49,7 +57,7 @@ def test_namespaces_all_when_k8s_namespaces_unset(monkeypatch, core_api):
 
 
 def test_namespaces_api_error(monkeypatch, core_api):
-    monkeypatch.setattr(autocomplete, 'K8S_NAMESPACES', ['default'])
+    monkeypatch.setattr(autocomplete, 'K8S_NAMESPACES', None)
     core_api.list_namespace.side_effect = Exception('boom')
 
     assert complete(autocomplete.k8s_list_namespace) == []

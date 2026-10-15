@@ -16,7 +16,7 @@ Optional ones:
 
 Kubernetes variables :
 Optional ones:
-- `K8S_NAMESPACES`: Comma-separated namespaces offered in commands autocomplete, e.g. `default,prod`. (Defaults: `None`, all namespaces)
+- `K8S_NAMESPACES`: Comma-separated namespaces offered in commands autocomplete, e.g. `default,prod`. They are offered as is, without querying the cluster: fast, and works when the bot isn't allowed to list namespaces cluster-wide. (Defaults: `None`, all namespaces, listed from the cluster)
 - `K8S_LOGS_TAIL_LINES`: Number of log lines fetched by `/kubectl logs`. The latest ones that fit are shown in the message, and when they don't all fit, all fetched lines are attached as a `.log` file. (Defaults: `200`)
 
 ENV global variables :
@@ -42,7 +42,8 @@ Weird behaviour may happen if you don't respect that rule.
 
 All commands only work in a server (not in DMs), for members with the `DISCORD_ROLE` role.  
 Answers are only visible to the member who used the command.  
-Options offer autocomplete: namespaces (limited to `K8S_NAMESPACES` if set), pods, and containers (shown as `<name or app label>/<container>`).
+Options offer autocomplete: namespaces (limited to `K8S_NAMESPACES` if set), pods, and containers (shown as `<name or app label>/<container>`).  
+Discord shows 25 suggestions at most: type part of a name to narrow the list.
 
 | Command | Options | Does |
 |---------|---------|------|
@@ -202,7 +203,7 @@ The container is quite light, as [Alpine][alpine] is used as base.
 ```
 $ docker images
 REPOSITORY                 TAG       SIZE
-lordslair/discord-k8s-bot  latest    126MB
+lordslair/discord-k8s-bot  latest    162MB
 ```
 
 On the performance topic, the container consumes about :
@@ -220,5 +221,6 @@ I'm open to requests/comments/ideas/issues in PR section.
    [kubernetes]: <https://github.com/kubernetes/kubernetes>
    [pycord]: <https://github.com/Pycord-Development/pycord>
    [loguru]: <https://github.com/Delgan/loguru>
+   [python]: <https://www.python.org>
    [pytest]: <https://docs.pytest.org>
    [hub]: <https://hub.docker.com/repository/docker/lordslair/discord-k8s-bot>

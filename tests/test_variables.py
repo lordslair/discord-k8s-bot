@@ -55,5 +55,6 @@ def test_k8s_logs_tail_lines(monkeypatch, reload, value, expected):
     assert reload(**env).K8S_LOGS_TAIL_LINES == expected
 
 
-def test_k8s_namespaces(reload):
-    assert reload(K8S_NAMESPACES='default,prod').K8S_NAMESPACES == ['default', 'prod']
+@pytest.mark.parametrize('value', ['default,prod', ' default , prod ', 'default,,prod,'])
+def test_k8s_namespaces(reload, value):
+    assert reload(K8S_NAMESPACES=value).K8S_NAMESPACES == ['default', 'prod']

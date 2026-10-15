@@ -101,14 +101,15 @@ async def k8s_list_namespaced_resources(ctx: discord.AutocompleteContext):
 
 
 async def k8s_list_namespace(ctx: discord.AutocompleteContext):
+    # Namespaces given in K8S_NAMESPACES: offered as is, without querying the cluster.
+    # Instant, and works when the bot isn't allowed to list namespaces cluster-wide
+    if K8S_NAMESPACES:
+        return _filter(ctx, [discord.OptionChoice(n) for n in K8S_NAMESPACES])
+
     try:
         namespaces = await asyncio.to_thread(_list_namespaces)
     except Exception as e:
         logger.error(f'K8s Query KO [{e}]')
         return []
 
-    db_list = []
-    for namespace in namespaces.items:
-        if not K8S_NAMESPACES or namespace.metadata.name in K8S_NAMESPACES:
-            db_list.append(discord.OptionChoice(namespace.metadata.name))
-    return _filter(ctx, db_list)
+    return _filter(ctx, [discord.OptionChoice(n.metadata.name) for n in namespaces.items])
