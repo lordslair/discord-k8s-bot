@@ -30,7 +30,7 @@ jobs:
         echo "version=$version" >> "$GITHUB_OUTPUT"
 
     - name: Set up Python ${{ steps.python.outputs.version }} 🐍
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ steps.python.outputs.version }}
         cache: pip
