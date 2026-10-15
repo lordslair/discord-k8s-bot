@@ -96,7 +96,7 @@ Follow these when adding or editing a workflow:
 - **Least privilege**: top-level `permissions: contents: read`. Add more only at job level and only when needed.
 - **Runner**: `ubuntu-24.04`, pinned (never `ubuntu-latest`).
 - **Timeouts**: every job sets `timeout-minutes` (5 for lint/tests, 10 for build-push).
-- **Step names**: short label followed by an emoji (`Checkout 🛎️`, `Set up Python 🐍`, `Install requirements ⏬`, `Lint with flake8 📝`, `Test with PyTest ⚙️`, `Build 🏗️ & Push to Docker Hub 🚀`, ...). Reuse the existing ones for the same kind of step.
+- **Step names**: short label followed by an emoji (`Checkout 🛎️`, `Read Python version 🔍`, `Set up Python X.Y 🐍`, `Install requirements ⏬`, `Lint with flake8 📝`, `Test with PyTest ⚙️`, `Build 🏗️ & Push to Docker Hub 🚀`, ...). Reuse the existing ones for the same kind of step.
 - **Actions**: pinned to a major version tag (`actions/checkout@vN`, `docker/build-push-action@vN`, ...). Dependabot bumps them.
 - **Python version**: never hard-coded in a workflow. It is read from the `Dockerfile` so CI always runs the same Python as the image. To change Python, change the `Dockerfile` only.
 - **Requirements split**: runtime deps in `requirements.txt` (compiled from `requirements.in`), lint-only deps in `requirements-lint.txt`, test-only deps in `requirements-tests.txt`, all pinned. Each job installs only what it needs, and its pip cache is keyed on those same files.
@@ -146,6 +146,7 @@ Known limits with these workflows:
 - `docker/metadata-action` fails with `Bad credentials`: it calls the GitHub API with the job token, which act fakes (an empty `-s GITHUB_TOKEN=` does not help). A real read-only token (`-s GITHUB_TOKEN=...`) should get past it.
 - The `type=gha` build cache needs GitHub's cache service and does not work under act.
 - The `setup-python` pip cache can't be saved (`reserveCache failed`): only a warning.
+- Avoid `-j lint` / `-j tests`: it also selects the reusable workflow itself as a standalone job, both runs get the same container name, and one fails with `Conflict. The container name ... is already in use`. Run the whole event instead.
 
 ### 3. On GitHub
 

@@ -18,11 +18,21 @@ jobs:
     - name: Checkout 🛎️
       uses: actions/checkout@v6
 
-    # Same Python as the image (alpine:3.20 ships 3.12)
-    - name: Set up Python 🐍
+    # CI runs the same Python as the image: the version comes from the Dockerfile only
+    - name: Read Python version 🔍
+      id: python
+      run: |
+        version=$(sed -nE 's/^FROM python:([0-9]+\.[0-9]+).*/\1/p' Dockerfile | head -1)
+        if [ -z "$version" ]; then
+          echo "::error::No 'FROM python:X.Y' found in Dockerfile"
+          exit 1
+        fi
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+
+    - name: Set up Python ${{ steps.python.outputs.version }} 🐍
       uses: actions/setup-python@v6
       with:
-        python-version: "3.12"
+        python-version: ${{ steps.python.outputs.version }}
         cache: pip
         cache-dependency-path: |
           requirements.txt
