@@ -1,4 +1,4 @@
-FROM python:3.13-alpine
+FROM python:3.14-alpine
 
 # Create user and group
 RUN adduser -h /code -u 1000 -D -H discord
