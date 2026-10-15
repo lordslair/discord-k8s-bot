@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - name: Checkout 🛎️
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     # CI runs the same Python as the image: the version comes from the Dockerfile only
     - name: Read Python version 🔍
