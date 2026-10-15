@@ -32,6 +32,8 @@ Don't blame the project if you fail with this.
 
 The bot expects to find inside the Container one kubeconfig file here: `/etc/k8s/kubeconfig.yaml`.  
 You can populate this file via a local mount with Docker, of via a configMap with Kubernetes.  
+To use another path, set `KUBECONFIG_FILE`.  
+If the file can't be loaded, commands answer `Command aborted: K8s config KO`.  
 
 The bot is designed to handle one kubeconfig file containing one Cluster.  
 Weird behaviour may happen if you don't respect that rule.  

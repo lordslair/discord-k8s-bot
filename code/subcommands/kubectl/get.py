@@ -4,10 +4,11 @@ import discord
 
 from discord.commands import option
 from discord.ext import commands
-from kubernetes import config, client
+from kubernetes import client
 from loguru import logger
 
 from subcommands.kubectl._autocomplete import k8s_list_namespace
+from subcommands.kubectl._kubeconfig import load_kubeconfig
 from variables import DISCORD_ROLE
 
 
@@ -45,12 +46,8 @@ def get(group_kubectl, bot):
             f'/{group_kubectl} get {namespace} {resource}'
             )
 
-        try:
-            config.load_kube_config("/etc/k8s/kubeconfig.yaml")
-        except Exception as e:
-            logger.error(f'[#{ctx.channel.name}][{ctx.author.name}] └──> K8s Load KO [{e}]')
-        else:
-            pass
+        if not await load_kubeconfig(ctx):
+            return
 
         if resource == 'pods':
             try:

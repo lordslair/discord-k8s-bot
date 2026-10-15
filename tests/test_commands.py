@@ -2,6 +2,7 @@
 """/diskube settings and /kubectl apply, config, delete, exec."""
 
 import discord
+import kubernetes
 import pytest
 
 from unittest.mock import MagicMock
@@ -159,3 +160,50 @@ def test_invalid_container(run, ctx, core_api, name, args):
     assert result.colour == discord.Colour.red()
     core_api.read_namespaced_pod_log.assert_not_called()
     core_api.connect_get_namespaced_pod_exec.assert_not_called()
+
+
+# Kubeconfig loading, shared by every command that queries the cluster
+
+COMMANDS = [
+    ('apply', ('default',)),
+    ('delete', ('default', 'pod', 'web-abc')),
+    ('exec', ('default', 'web-abc/nginx', 'ls')),
+    ('get', ('default', 'pods')),
+    ('logs', ('default', 'web-abc/nginx')),
+]
+
+
+@pytest.mark.parametrize('name, args', COMMANDS)
+def test_kubeconfig_error_aborts(monkeypatch, run, ctx, core_api, name, args):
+    monkeypatch.setattr(
+        kubernetes.config, 'load_kube_config', MagicMock(side_effect=Exception('boom')),
+    )
+
+    run('kubectl', name, *args)
+
+    result = embed(ctx.respond)
+    assert result.description == 'Command aborted: K8s config KO'
+    assert result.colour == discord.Colour.red()
+    # Stopped before any query or answer
+    assert core_api.method_calls == []
+    ctx.interaction.edit_original_response.assert_not_called()
+
+
+@pytest.mark.parametrize('name, args', COMMANDS)
+def test_kubeconfig_file_from_variable(monkeypatch, run, core_api, name, args):
+    monkeypatch.setenv('KUBECONFIG_FILE', '/tmp/kubeconfig.yaml')
+    core_api.read_namespaced_pod_log.return_value = ''  # logs needs a str
+
+    run('kubectl', name, *args)
+
+    kubernetes.config.load_kube_config.assert_called_once_with('/tmp/kubeconfig.yaml')
+
+
+@pytest.mark.parametrize('name, args', COMMANDS)
+def test_kubeconfig_file_default(monkeypatch, run, core_api, name, args):
+    monkeypatch.delenv('KUBECONFIG_FILE', raising=False)
+    core_api.read_namespaced_pod_log.return_value = ''  # logs needs a str
+
+    run('kubectl', name, *args)
+
+    kubernetes.config.load_kube_config.assert_called_once_with('/etc/k8s/kubeconfig.yaml')
