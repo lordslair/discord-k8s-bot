@@ -10,6 +10,7 @@ No test talks to Discord or Kubernetes:
 """
 
 import asyncio
+import os
 
 import discord
 import kubernetes
@@ -17,7 +18,11 @@ import pytest
 
 from unittest.mock import AsyncMock, MagicMock
 
-from subcommands import diskube, kubectl
+# Mandatory variables: without them, variables.py exits when the bot code is imported
+os.environ.setdefault('DISCORD_TOKEN', 'test-token')
+os.environ.setdefault('DISCORD_ROLE', 'test-role')
+
+from subcommands import diskube, kubectl  # noqa: E402
 
 
 @pytest.fixture(autouse=True)

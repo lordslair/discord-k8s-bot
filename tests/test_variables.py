@@ -22,6 +22,24 @@ def reload(monkeypatch):
     importlib.reload(variables)
 
 
+@pytest.mark.parametrize('name', ['DISCORD_TOKEN', 'DISCORD_ROLE'])
+@pytest.mark.parametrize('empty', [False, True])
+def test_mandatory_variable_missing_exits(monkeypatch, reload, name, empty):
+    if empty:
+        monkeypatch.setenv(name, '')
+    else:
+        monkeypatch.delenv(name, raising=False)
+
+    with pytest.raises(SystemExit) as exit:
+        reload()
+    assert exit.value.code == 1
+
+
+def test_mandatory_variables_set(reload):
+    module = reload(DISCORD_TOKEN='token', DISCORD_ROLE='role')
+    assert (module.DISCORD_TOKEN, module.DISCORD_ROLE) == ('token', 'role')
+
+
 @pytest.mark.parametrize('value, expected', [
     (None, 200),    # unset: default
     ('', 200),      # empty: default

@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 
 import os
+import sys
 
 from loguru import logger
 
@@ -17,14 +18,14 @@ if DISCORD_GUILD:
 if DISCORD_TOKEN:
     logger.success('DISCORD_TOKEN is set')
 else:
-    logger.warning('DISCORD_TOKEN is not set')
-    exit
+    logger.error('DISCORD_TOKEN is not set')
+    sys.exit(1)
 
 if DISCORD_ROLE:
     logger.success('DISCORD_ROLE is set')
 else:
-    logger.warning('DISCORD_ROLE is not set')
-    exit
+    logger.error('DISCORD_ROLE is not set')
+    sys.exit(1)
 
 if K8S_NAMESPACES:
     K8S_NAMESPACES = K8S_NAMESPACES.split(",")
