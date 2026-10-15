@@ -167,16 +167,19 @@ def test_services_none(run, ctx, core_api):
     assert embed(ctx.respond).description == 'No services were found for this namespace'
 
 
-@pytest.mark.xfail(strict=True, raises=TypeError,
-                   reason='LoadBalancer without address yet: ingress is None, not iterable')
 def test_services_load_balancer_pending(run, ctx, core_api):
+    """No address assigned yet: shown as <pending>, like kubectl."""
     core_api.list_namespaced_service.return_value = services(
         service('lb', type='LoadBalancer', hostnames=None),
     )
 
     run('kubectl', 'get', 'default', 'services')
 
-    assert 'lb' in embed(ctx.interaction.edit_original_response).description
+    assert embed(ctx.interaction.edit_original_response).description == (
+        "`lb (LoadBalancer)`\n"
+        "> `10.0.0.1:80 -> http:8080`\n"
+        "> `hostname: <pending>`\n"
+    )
 
 
 # Errors

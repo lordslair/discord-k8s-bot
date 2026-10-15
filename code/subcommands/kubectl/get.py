@@ -266,7 +266,12 @@ def get(group_kubectl, bot):
 
                 # Specific for Loadbalancers
                 if service.spec.type == 'LoadBalancer':
-                    for ingress in service.status.load_balancer.ingress:
+                    # ingress is None until the cloud provider has assigned an address
+                    ingresses = service.status.load_balancer.ingress or []
+                    if not ingresses:
+                        logger.trace("> hostname: <pending>")
+                        description += "> `hostname: <pending>`\n"
+                    for ingress in ingresses:
                         logger.trace(f"> hostname: {ingress.hostname}")
                         description += f"> `hostname: {ingress.hostname}`\n"
 
