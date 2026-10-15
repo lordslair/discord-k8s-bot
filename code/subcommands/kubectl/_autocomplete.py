@@ -32,23 +32,27 @@ def k8s_list_namespaced_containers(ctx: discord.AutocompleteContext):
     else:
         db_list = []
         for pod in pods.items:
+            # labels is None on a pod without any
+            labels = pod.metadata.labels or {}
             for container in pod.spec.containers:
-                if 'name' in pod.metadata.labels:
+                if 'name' in labels:
                     db_list.append(
                         discord.OptionChoice(
-                            f"{pod.metadata.labels['name']}/{container.name}",
+                            f"{labels['name']}/{container.name}",
                             value=f'{pod.metadata.name}/{container.name}'
                             )
                       )
-                elif 'app' in pod.metadata.labels:
+                elif 'app' in labels:
                     db_list.append(
                         discord.OptionChoice(
-                            f"{pod.metadata.labels['app']}/{container.name}",
+                            f"{labels['app']}/{container.name}",
                             value=f'{pod.metadata.name}/{container.name}'
                             )
                       )
                 else:
-                    db_list.append(f'{pod.metadata.name}/{container.name}')
+                    db_list.append(
+                        discord.OptionChoice(f'{pod.metadata.name}/{container.name}')
+                      )
         return db_list
 
 

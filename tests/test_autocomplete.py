@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 """Autocomplete callbacks: namespaces, pods and containers lists."""
 
-import pytest
+import discord
 
 from unittest.mock import MagicMock
 
@@ -18,11 +18,13 @@ def actx(**options):
 
 
 def names(choices):
-    return [c.name if hasattr(c, 'name') else c for c in choices]
+    assert all(isinstance(c, discord.OptionChoice) for c in choices)
+    return [c.name for c in choices]
 
 
 def values(choices):
-    return [c.value if hasattr(c, 'value') else c for c in choices]
+    assert all(isinstance(c, discord.OptionChoice) for c in choices)
+    return [c.value for c in choices]
 
 
 # Namespaces
@@ -95,8 +97,6 @@ def test_containers_by_label(core_api):
     ]
 
 
-@pytest.mark.xfail(strict=True, raises=TypeError,
-                   reason="Pod without labels: `'name' in None` raises TypeError")
 def test_containers_pod_without_labels(core_api):
     core_api.list_namespaced_pod.return_value = pods(
         pod('bare', labels=None, containers=[('app', True, 0)]),
