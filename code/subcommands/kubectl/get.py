@@ -80,14 +80,15 @@ def get(group_kubectl, bot):
             await ctx.interaction.edit_original_response(embed=embed)
             # We loop over pods to have detailed infos
             for pod in resources.items:
-                # We skip CronJob generated pods
-                if 'job-name' in pod.metadata.labels:
+                # We skip CronJob generated pods (labels is None on a pod without any)
+                if 'job-name' in (pod.metadata.labels or {}):
                     continue
 
                 description += f"`{pod.metadata.name}`\n"
                 logger.trace(pod.metadata.name)
 
-                for c in pod.status.container_statuses:
+                # container_statuses is None until the pod is scheduled and started
+                for c in pod.status.container_statuses or []:
                     if c.ready:
                         status = '🟩 '
                     else:

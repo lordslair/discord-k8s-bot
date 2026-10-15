@@ -53,8 +53,6 @@ def test_pods_skips_job_pods(run, ctx, core_api):
     assert 'backup-123' not in description
 
 
-@pytest.mark.xfail(strict=True, raises=TypeError,
-                   reason="Pod without labels: `'job-name' in None` raises TypeError")
 def test_pods_without_labels(run, ctx, core_api):
     core_api.list_namespaced_pod.return_value = pods(pod('bare', labels=None))
 
@@ -63,8 +61,6 @@ def test_pods_without_labels(run, ctx, core_api):
     assert 'bare' in embed(ctx.interaction.edit_original_response).description
 
 
-@pytest.mark.xfail(strict=True, raises=TypeError,
-                   reason='Pod not started yet: container_statuses is None, not iterable')
 def test_pods_not_started(run, ctx, core_api):
     core_api.list_namespaced_pod.return_value = pods(
         pod('pending', labels={'app': 'web'}, statuses=False),
