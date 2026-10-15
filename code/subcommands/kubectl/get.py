@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 
+import asyncio
 import discord
 
 from discord.commands import option
@@ -52,7 +53,9 @@ def get(group_kubectl, bot):
         if resource == 'pods':
             try:
                 logger.info(f'[#{ctx.channel.name}][{ctx.author.name}] ├──> K8s Query')
-                resources = client.CoreV1Api().list_namespaced_pod(namespace)
+                resources = await asyncio.to_thread(
+                    client.CoreV1Api().list_namespaced_pod, namespace,
+                    )
                 logger.debug(f'[#{ctx.channel.name}][{ctx.author.name}] ├──> K8s Query Ended')
             except Exception as e:
                 logger.error(f'[#{ctx.channel.name}][{ctx.author.name}] └──> K8s Query KO [{e}]')
@@ -104,7 +107,9 @@ def get(group_kubectl, bot):
         elif resource == 'pvc':
             try:
                 logger.info(f'[#{ctx.channel.name}][{ctx.author.name}] ├──> K8s Query')
-                resources = client.CoreV1Api().list_namespaced_persistent_volume_claim(namespace)
+                resources = await asyncio.to_thread(
+                    client.CoreV1Api().list_namespaced_persistent_volume_claim, namespace,
+                    )
                 logger.debug(f'[#{ctx.channel.name}][{ctx.author.name}] ├──> K8s Query Ended')
             except Exception as e:
                 logger.error(f'[#{ctx.channel.name}][{ctx.author.name}] └──> K8s Query KO [{e}]')
@@ -160,7 +165,9 @@ def get(group_kubectl, bot):
         elif resource == 'deployments':
             try:
                 logger.info(f'[#{ctx.channel.name}][{ctx.author.name}] ├──> K8s Query')
-                resources = client.AppsV1Api().list_namespaced_deployment(namespace)
+                resources = await asyncio.to_thread(
+                    client.AppsV1Api().list_namespaced_deployment, namespace,
+                    )
                 logger.debug(f'[#{ctx.channel.name}][{ctx.author.name}] ├──> K8s Query Ended')
             except Exception as e:
                 logger.error(f'[#{ctx.channel.name}][{ctx.author.name}] └──> K8s Query KO [{e}]')
@@ -216,7 +223,9 @@ def get(group_kubectl, bot):
         elif resource == 'services':
             try:
                 logger.info(f'[#{ctx.channel.name}][{ctx.author.name}] ├──> K8s Query')
-                resources = client.CoreV1Api().list_namespaced_service(namespace)
+                resources = await asyncio.to_thread(
+                    client.CoreV1Api().list_namespaced_service, namespace,
+                    )
                 logger.debug(f'[#{ctx.channel.name}][{ctx.author.name}] ├──> K8s Query Ended')
             except Exception as e:
                 logger.error(f'[#{ctx.channel.name}][{ctx.author.name}] └──> K8s Query KO [{e}]')

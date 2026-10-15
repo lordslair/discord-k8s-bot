@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 
+import asyncio
 import discord
 
 from discord.commands import option
@@ -75,7 +76,8 @@ def exec(group_kubectl, bot):
             try:
 
                 logger.info(f'[#{ctx.channel.name}][{ctx.author.name}] ├──> K8s Query')
-                exec_stdout = stream(
+                exec_stdout = await asyncio.to_thread(
+                    stream,
                     client.CoreV1Api().connect_get_namespaced_pod_exec,
                     pod_name,
                     namespace,

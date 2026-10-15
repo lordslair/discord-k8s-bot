@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 
+import asyncio
 import discord
 
 from discord.commands import option
@@ -58,7 +59,9 @@ def delete(group_kubectl, bot):
         if resource == 'pod' and resource_name is not None:
             try:
                 logger.info(f'[#{ctx.channel.name}][{ctx.author.name}] ├──> K8s Query')
-                client.CoreV1Api().delete_namespaced_pod(resource_name, namespace)
+                await asyncio.to_thread(
+                    client.CoreV1Api().delete_namespaced_pod, resource_name, namespace,
+                    )
                 logger.debug(f'[#{ctx.channel.name}][{ctx.author.name}] ├──> K8s Query Ended')
             except Exception as e:
                 logger.error(f'[#{ctx.channel.name}][{ctx.author.name}] └──> K8s Query KO [{e}]')

@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 
+import asyncio
 import discord
 import os
 
@@ -18,7 +19,8 @@ async def load_kubeconfig(ctx):
     On failure, tell the user and return False: the command must stop there.
     """
     try:
-        config.load_kube_config(kubeconfig_file())
+        # Reads and parses a file: in a thread, not to block the event loop
+        await asyncio.to_thread(config.load_kube_config, kubeconfig_file())
     except Exception as e:
         logger.error(f'[#{ctx.channel.name}][{ctx.author.name}] └──> K8s Load KO [{e}]')
         await ctx.respond(

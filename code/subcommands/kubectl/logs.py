@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 
+import asyncio
 import discord
 import io
 import re
@@ -112,7 +113,8 @@ def logs(group_kubectl, bot):
         if pod_name is not None and container_name is not None:
             try:
                 logger.info(f'[#{ctx.channel.name}][{ctx.author.name}] ├──> K8s Query')
-                log = client.CoreV1Api().read_namespaced_pod_log(
+                log = await asyncio.to_thread(
+                    client.CoreV1Api().read_namespaced_pod_log,
                     name=pod_name,
                     namespace=namespace,
                     container=container_name,

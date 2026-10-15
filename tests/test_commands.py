@@ -1,13 +1,15 @@
 # -*- coding: utf8 -*-
 """/diskube settings and /kubectl apply, config, delete, exec."""
 
+import threading
+
 import discord
 import kubernetes
 import pytest
 
 from unittest.mock import MagicMock
 
-from helpers import embed, module
+from helpers import deployments, embed, module, pods, pvcs, services
 
 
 # /diskube settings
@@ -233,3 +235,49 @@ def test_kubeconfig_file_default(monkeypatch, run, core_api, name, args):
     run('kubectl', name, *args)
 
     kubernetes.config.load_kube_config.assert_called_once_with('/etc/k8s/kubeconfig.yaml')
+
+
+# Never block the event loop (and every other interaction): blocking calls run in a thread
+
+def recorder(threads, result=None):
+    def _record(*args, **kwargs):
+        threads.append(threading.current_thread())
+        return result
+    return _record
+
+
+@pytest.mark.parametrize('name, args', COMMANDS)
+def test_kubeconfig_loaded_in_a_thread(run, core_api, name, args):
+    core_api.read_namespaced_pod_log.return_value = ''  # logs needs a str
+    threads = []
+    kubernetes.config.load_kube_config.side_effect = recorder(threads)
+
+    run('kubectl', name, *args)
+
+    assert threads and threads[0] is not threading.main_thread()
+
+
+@pytest.mark.parametrize('name, args, api_name, method, result', [
+    ('get', ('default', 'pods'), 'core_api', 'list_namespaced_pod', pods()),
+    ('get', ('default', 'pvc'), 'core_api', 'list_namespaced_persistent_volume_claim', pvcs()),
+    ('get', ('default', 'deployments'), 'apps_api', 'list_namespaced_deployment', deployments()),
+    ('get', ('default', 'services'), 'core_api', 'list_namespaced_service', services()),
+    ('delete', ('default', 'pod', 'web-abc'), 'core_api', 'delete_namespaced_pod', None),
+    ('logs', ('default', 'web-abc/nginx'), 'core_api', 'read_namespaced_pod_log', ''),
+])
+def test_k8s_query_in_a_thread(request, run, name, args, api_name, method, result):
+    threads = []
+    getattr(request.getfixturevalue(api_name), method).side_effect = recorder(threads, result)
+
+    run('kubectl', name, *args)
+
+    assert threads and threads[0] is not threading.main_thread()
+
+
+def test_exec_in_a_thread(run, stream):
+    threads = []
+    stream.side_effect = recorder(threads, 'output')
+
+    run('kubectl', 'exec', 'default', 'web-abc/nginx', 'ls')
+
+    assert threads and threads[0] is not threading.main_thread()
