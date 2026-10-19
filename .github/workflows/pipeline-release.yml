@@ -58,7 +58,7 @@ jobs:
     # Read-only cache: a tag's cache could only be reused by that same tag,
     # so reuse the one master's edge builds already filled.
     - name: Build 🏗️ & Push to Docker Hub 🚀
-      uses: docker/build-push-action@v6
+      uses: docker/build-push-action@v7
       with:
         context: .
         push: true
