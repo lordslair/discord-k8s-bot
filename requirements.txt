@@ -6,7 +6,7 @@
 #
 aiohappyeyeballs==2.7.1
     # via aiohttp
-aiohttp==3.14.3
+aiohttp==3.14.5
     # via
     #   aiohttp-retry
     #   kubernetes
@@ -35,7 +35,7 @@ idna==3.10
     # via
     #   requests
     #   yarl
-kubernetes==37.0.1
+kubernetes==37.0.3
     # via -r requirements.in
 loguru==0.7.3
     # via -r requirements.in
@@ -43,17 +43,19 @@ multidict==6.1.0
     # via
     #   aiohttp
     #   yarl
-oauthlib==3.2.2
-    # via requests-oauthlib
-propcache==0.2.0
+oauthlib==4.0.1
+    # via
+    #   kubernetes
+    #   requests-oauthlib
+propcache==0.5.4
     # via
     #   aiohttp
     #   yarl
 py-cord==2.8.1
     # via -r requirements.in
-pydantic==2.14.1
+pydantic==2.14.4
     # via kubernetes
-pydantic-core==2.50.1
+pydantic-core==2.50.5
     # via pydantic
 python-dateutil==2.9.0.post0
     # via kubernetes
@@ -82,5 +84,5 @@ urllib3==2.8.0
     #   requests
 websocket-client==1.6.4
     # via kubernetes
-yarl==1.18.3
+yarl==1.25.1
     # via aiohttp
